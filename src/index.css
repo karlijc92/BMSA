@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 142.1 76.2% 36.3%;
+    --primary-foreground: 355.7 100% 97.3%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 142.1 76.2% 36.3%;
+    --accent-foreground: 355.7 100% 97.3%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 142.1 76.2% 36.3%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 142.1 76.2% 36.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 142.1 76.2% 36.3%;
+    --primary-foreground: 355.7 100% 97.3%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 142.1 76.2% 36.3%;
+    --accent-foreground: 355.7 100% 97.3%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 142.1 76.2% 36.3%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 142.1 76.2% 36.3%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-black text-foreground;
+  }
+}
+
+/* Custom grid pattern */
+.bg-grid-white\/\[0\.02\] {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+/* FORCE BMSA BLACK + EMERALD THEME OVERRIDES */
+.text-purple-500,
+.text-indigo-500,
+.text-pink-500,
+.text-fuchsia-500 {
+  color: #10b981 !important; /* emerald */
+}
+
+.bg-purple-500,
+.bg-indigo-500,
+.bg-pink-500,
+.bg-fuchsia-500 {
+  background-color: #10b981 !important; /* emerald */
+}
+
+.from-indigo-500,
+.via-purple-500,
+.to-pink-500,
+.from-indigo-600,
+.via-purple-600,
+.to-pink-600 {
+  background-image: linear-gradient(to right, #000000, #10b981) !important; /* black → emerald */
+}
+
+.bg-gradient-to-r,
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right, #000000, #020617, #10b981) !important;
+}
+
+.text-indigo-400,
+.text-purple-400,
+.text-pink-400 {
+  color: #34d399 !important; /* lighter emerald accent */
+}
+
+.bg-indigo-700,
+.bg-purple-700,
+.bg-pink-700 {
+  background-color: #020617 !important; /* deep slate/black background */
+}
+
+/* end forced theme */
