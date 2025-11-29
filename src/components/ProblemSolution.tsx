@@ -36,12 +36,17 @@ const ProblemSolution: React.FC = () => {
             <li>✅ Breaks down risks vs. rewards in plain English</li>
             <li>✅ Helps you build stacks based on your goals</li>
             <li>✅ Flags sketchy compounds and interactions</li>
-            <li>✅ Focused on <span className="text-emerald-400">education, not prescriptions</span></li>
+            <li>
+              ✅ Focused on{" "}
+              <span className="text-emerald-400">
+                education, not prescriptions
+              </span>
+            </li>
           </ul>
           <p className="text-xs text-gray-500">
-            BMSA does not replace medical care. It gives you structured, educational
-            info so you can ask smarter questions, make safer choices, and stop
-            gambling with your health.
+            BMSA does not replace medical care. It gives you structured,
+            educational info so you can ask smarter questions, make safer
+            choices, and stop gambling with your health.
           </p>
         </div>
       </div>
