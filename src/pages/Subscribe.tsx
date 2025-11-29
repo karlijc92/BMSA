@@ -1,10 +1,8 @@
 import React from "react";
-import Navigation from "@/components/Navigation";
 
 const Subscribe: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-black">
-      <Navigation />
       
       <div className="pt-20 pb-12 px-4">
         <div className="max-w-4xl mx-auto text-center">
