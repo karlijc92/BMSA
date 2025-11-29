@@ -1,116 +1,52 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, AlertTriangle, Users, CreditCard } from 'lucide-react';
+import React from "react";
 
-export default function ProblemSolution() {
-  const problems = [
-    {
-      icon: AlertTriangle,
-      title: "Information Overload",
-      description: "Conflicting advice from influencers, forums, and marketing makes it impossible to know what actually works"
-    },
-    {
-      icon: Shield,
-      title: "Safety Concerns",
-      description: "No reliable way to verify supplement safety, interactions, or proper dosing protocols"
-    },
-    {
-      icon: Users,
-      title: "Biased Sources",
-      description: "Most information comes from people trying to sell you something, not give honest guidance"
-    },
-    {
-      icon: CreditCard,
-      title: "Expensive Mistakes",
-      description: "Wasting money on ineffective supplements or dangerous combinations"
-    }
-  ];
-
-  const solutions = [
-    {
-      icon: Shield,
-      title: "AI-Powered Safety Analysis",
-      description: "Get instant analysis of supplement interactions, contraindications, and safety protocols"
-    },
-    {
-      icon: Users,
-      title: "Unbiased Recommendations",
-      description: "Research-backed guidance with no affiliate links or product sales - just honest advice"
-    },
-    {
-      icon: AlertTriangle,
-      title: "Harm Reduction Focus",
-      description: "Prioritize your health and safety with evidence-based harm reduction protocols"
-    },
-    {
-      icon: CreditCard,
-      title: "Cost-Effective Stacks",
-      description: "Optimize your supplement budget with personalized recommendations that actually work"
-    }
-  ];
-
+const ProblemSolution: React.FC = () => {
   return (
-    <section className="py-20 bg-gradient-to-br from-slate-950 via-black to-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Problems Section */}
-        <div className="mb-20">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-              The <span className="text-red-400">Problem</span> with Supplement Advice
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              The supplement industry is full of misinformation, dangerous advice, and profit-driven recommendations
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {problems.map((problem, index) => (
-              <Card key={index} className="bg-red-900/20 border-red-500/30 hover:border-red-400/50 transition-all duration-300 backdrop-blur-sm">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center mb-4">
-                    <problem.icon className="w-6 h-6 text-red-400" />
-                  </div>
-                  <CardTitle className="text-white">{problem.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-gray-300">
-                    {problem.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+    <section className="py-20 bg-black px-4">
+      <div className="max-w-5xl mx-auto grid gap-10 md:grid-cols-2 items-center">
+        {/* Problem Side */}
+        <div className="space-y-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-white">
+            The supplement world is{" "}
+            <span className="text-emerald-400">a mess</span>.
+          </h2>
+          <p className="text-gray-300 text-lg">
+            Fake gurus. Shady underground products. Confusing labels. Everyone
+            has an opinion, but nobody shows real risk, real tradeoffs, or how
+            this actually hits your body.
+          </p>
+          <ul className="space-y-2 text-gray-400 text-sm md:text-base">
+            <li>• No idea which stacks are actually worth the money</li>
+            <li>• Zero harm-reduction guidance for serious lifters</li>
+            <li>• Random Reddit advice instead of structured logic</li>
+            <li>• Doctors who don&apos;t understand performance goals</li>
+          </ul>
         </div>
 
-        {/* Solutions Section */}
-        <div>
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-              The <span className="text-emerald-400">BMSA Solution</span>
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              AI-powered guidance that cuts through the BS and prioritizes your health and results
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {solutions.map((solution, index) => (
-              <Card key={index} className="bg-gray-900/50 border-emerald-500/20 hover:border-emerald-400/40 transition-all duration-300 backdrop-blur-sm">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-emerald-500/10 rounded-lg flex items-center justify-center mb-4">
-                    <solution.icon className="w-6 h-6 text-emerald-400" />
-                  </div>
-                  <CardTitle className="text-white">{solution.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-gray-300">
-                    {solution.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        {/* Solution Side */}
+        <div className="bg-slate-900/60 border border-emerald-500/30 rounded-2xl p-6 md:p-8 shadow-lg shadow-emerald-500/10">
+          <h3 className="text-2xl font-semibold text-white mb-3">
+            BMSA: Your underground supplement advisor.
+          </h3>
+          <p className="text-gray-300 mb-4">
+            Instead of guessing, you get an AI assistant trained to think like a
+            coach, a risk analyst, and a harm-reduction nerd all at once.
+          </p>
+          <ul className="space-y-2 text-gray-300 text-sm md:text-base mb-6">
+            <li>✅ Breaks down risks vs. rewards in plain English</li>
+            <li>✅ Helps you build stacks based on your goals</li>
+            <li>✅ Flags sketchy compounds and interactions</li>
+            <li>✅ Focused on <span className="text-emerald-400">education, not prescriptions</span></li>
+          </ul>
+          <p className="text-xs text-gray-500">
+            BMSA does not replace medical care. It gives you structured, educational
+            info so you can ask smarter questions, make safer choices, and stop
+            gambling with your health.
+          </p>
         </div>
       </div>
     </section>
   );
-}
+};
+
+export default ProblemSolution;
