@@ -3,7 +3,6 @@ import React from "react";
 const Subscribe: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-black">
-      
       <div className="pt-20 pb-12 px-4">
         <div className="max-w-4xl mx-auto text-center">
           {/* Header */}
