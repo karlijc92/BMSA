@@ -1,19 +1,20 @@
+import React from "react";
 import Hero from "../components/Hero";
-import ProblemSolution from "../components/ProblemSolution";
-import Features from "../components/Features";
 import HowItWorks from "../components/HowItWorks";
+import Features from "../components/Features";
 import Pricing from "../components/Pricing";
 import Footer from "../components/Footer";
 
-export default function Index() {
+const Index: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-slate-950 to-slate-900">
+    <main className="min-h-screen bg-black text-white">
       <Hero />
-      <ProblemSolution />
-      <Features />
       <HowItWorks />
+      <Features />
       <Pricing />
       <Footer />
-    </div>
+    </main>
   );
-}
+};
+
+export default Index;
