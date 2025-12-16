@@ -73,13 +73,6 @@ const Hero: React.FC = () => {
             <p className="text-slate-300 mt-1">AI Availability</p>
           </div>
         </div>
-
-        {/* Disclaimer */}
-        <p className="text-xs text-slate-400 max-w-3xl mx-auto">
-          Educational information only. Always consult healthcare professionals
-          before starting any supplement regimen. BMSA promotes harm reduction
-          and legal compliance.
-        </p>
       </div>
     </section>
   );
