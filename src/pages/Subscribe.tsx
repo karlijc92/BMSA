@@ -105,7 +105,7 @@ const Subscribe: React.FC = () => {
               </ul>
 
               <a
-                href="https://buy.stripe.com/test_8wM6oV2Ub6Zb9vq4gh"
+                href="https://buy.stripe.com/3cI6oI6OpdwS2qqfMjeME04"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 px-6 rounded-xl text-center transition-all duration-300 hover:scale-105 shadow-lg shadow-emerald-600/25"
@@ -208,7 +208,7 @@ const Subscribe: React.FC = () => {
               </ul>
 
               <a
-                href="https://buy.stripe.com/test_5kA5kR8iF0B7bDy6op"
+                href="https://buy.stripe.com/dRm6oIgoZ3Wi1mm57FeME05"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 px-6 rounded-xl text-center transition-all duration-300 hover:scale-105 shadow-lg shadow-emerald-600/25"
