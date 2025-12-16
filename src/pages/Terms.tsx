@@ -89,7 +89,7 @@ export default function Terms() {
           <div>
             <h2 className="text-lg font-semibold text-white">8) Contact</h2>
             <p>
-              Questions? Email: <span className="text-emerald-400">support@yourdomain.com</span>
+              Questions? Email: <span className="text-emerald-400">proofmodepro365@gmail.com</span>
             </p>
           </div>
         </div>
