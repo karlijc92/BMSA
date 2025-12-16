@@ -24,8 +24,8 @@ const Hero: React.FC = () => {
         {/* Subheading */}
         <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto mb-10">
           Navigate the underground supplement world safely with AI-powered
-          guidance, research-backed insights, and comprehensive harm
-          reduction protocols.
+          guidance, research-backed insights, and comprehensive harm reduction
+          protocols.
         </p>
 
         {/* Feature Pills */}
@@ -51,7 +51,7 @@ const Hero: React.FC = () => {
           </a>
 
           <a
-            href="/subscription-ai"
+            href="/profile"
             className="rounded-full border border-emerald-500 px-8 py-3 text-sm font-semibold text-emerald-300 bg-black/40 hover:bg-black/60 transition"
           >
             Member Login
@@ -79,3 +79,4 @@ const Hero: React.FC = () => {
 };
 
 export default Hero;
+
