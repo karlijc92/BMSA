@@ -37,9 +37,10 @@ const Pricing: React.FC = () => {
         <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
           Choose Your <span className="text-emerald-400">Access Level</span>
         </h2>
+
         <p className="text-gray-400 max-w-2xl mx-auto mb-10 text-sm md:text-base">
-          BMSA is for education and harm reduction. No medical advice, no
-          prescriptions, no sourcing help – just clear analysis so you stop
+          BMSA is focused on education and harm reduction. No medical advice, no
+          prescriptions, no sourcing help — just clear analysis so you stop
           guessing with your body.
         </p>
 
@@ -75,12 +76,6 @@ const Pricing: React.FC = () => {
             </div>
           ))}
         </div>
-
-        <p className="text-xs text-gray-500 mt-6 max-w-2xl mx-auto">
-          BMSA is for informational & educational purposes only and does not
-          replace medical care. Always consult a qualified professional before
-          starting, stopping, or changing any protocol.
-        </p>
       </div>
     </section>
   );
