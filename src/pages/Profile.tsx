@@ -1,3 +1,5 @@
+import DisclaimerFooter from "../components/DisclaimerFooter";
+
 export default function Profile() {
   return (
     <main className="min-h-screen bg-black text-white">
@@ -15,6 +17,8 @@ export default function Profile() {
           </p>
         </div>
       </section>
+
+      <DisclaimerFooter />
     </main>
   );
 }
