@@ -1,6 +1,5 @@
-import { useState, useRef, useEffect, FormEvent } from "react";
+import { useEffect, useRef, useState, FormEvent } from "react";
 import DisclaimerFooter from "@/components/DisclaimerFooter";
-
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -12,22 +11,25 @@ export default function SubscriptionAI() {
     {
       role: "assistant",
       content:
-        "Hi! I'm your Black Market Supplement Advisor (BMSA). Tell me about your fitness goals and any supplements you're curious about.",
+        "Hi! I'm your Black Market Supplement Advisor (BMSA). Tell me your fitness goals and what supplements you're curious about.",
     },
   ]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [input, setInput] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  const handleSubmit = async (e: FormEvent) => {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+
     const trimmed = input.trim();
-    if (!trimmed || loading) return;
+    if (!trimmed) return;
+    if (loading) return;
 
     const newMessages: ChatMessage[] = [
       ...messages,
@@ -51,8 +53,9 @@ export default function SubscriptionAI() {
       }
 
       const data = await res.json();
+
       const reply =
-        typeof data.reply === "string"
+        typeof data?.reply === "string"
           ? data.reply
           : "Sorry, I couldn't generate a response.";
 
@@ -63,7 +66,7 @@ export default function SubscriptionAI() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -90,7 +93,7 @@ export default function SubscriptionAI() {
           Black Market Supplement Advisor
         </h1>
 
-        {/* Memberstack gated content */}
+        {/* MEMBERSTACK GATED CONTENT */}
         <div data-ms-content="underground-supplement-advisor">
           <div className="border border-emerald-500/40 rounded-xl p-4 h-[480px] flex flex-col bg-slate-900/60">
             <div className="flex-1 overflow-y-auto space-y-3 pr-1">
@@ -130,6 +133,7 @@ export default function SubscriptionAI() {
                 placeholder="Ask about supplements, workouts, or nutrition..."
                 className="flex-1 rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm outline-none focus:border-emerald-500"
               />
+
               <button
                 type="submit"
                 disabled={loading}
@@ -150,6 +154,7 @@ export default function SubscriptionAI() {
             <span className="font-semibold text-emerald-400">AIBMSA</span>{" "}
             subscription.
           </p>
+
           <div className="mt-2 flex gap-2">
             <button
               data-ms-modal="signup"
@@ -157,6 +162,7 @@ export default function SubscriptionAI() {
             >
               Sign up
             </button>
+
             <button
               data-ms-modal="login"
               className="rounded-lg px-4 py-2 text-sm border border-slate-600"
