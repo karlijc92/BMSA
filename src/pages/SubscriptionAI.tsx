@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, FormEvent } from "react";
-import DisclaimerFooter from "../DisclaimerFooter";
+import DisclaimerFooter from "@/components/DisclaimerFooter";
+
 
 interface ChatMessage {
   role: "user" | "assistant";
