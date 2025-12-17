@@ -1,4 +1,5 @@
-import DisclaimerFooter from "../DisclaimerFooter";
+import DisclaimerFooter from "@/components/DisclaimerFooter";
+
 
 export default function Profile() {
   return (
