@@ -1,5 +1,6 @@
 import React from "react";
-import DisclaimerFooter from "../DisclaimerFooter";
+import DisclaimerFooter from "@/components/DisclaimerFooter";
+
 
 const Subscribe: React.FC = () => {
   return (
