@@ -4,7 +4,8 @@ import Features from "@/components/Features";
 import HowItWorks from "@/components/HowItWorks";
 import Pricing from "@/components/Pricing";
 import Footer from "@/components/Footer";
-import DisclaimerFooter from "../DisclaimerFooter";
+import DisclaimerFooter from "@/components/DisclaimerFooter";
+
 
 export default function Index() {
   return (
