@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,8 @@ export default function App() {
           <Route path="/" element={<Index />} />
           <Route path="/subscribe" element={<Subscribe />} />
           <Route path="/subscription-ai" element={<SubscriptionAI />} />
+
+          <Route path="/login" element={<Login />} />
 
           <Route path="/profile" element={<Profile />} />
           <Route path="/privacy" element={<Privacy />} />
