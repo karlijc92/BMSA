@@ -1,17 +1,6 @@
 import React from "react";
 
 const Hero: React.FC = () => {
-  const openLogin = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    if (window.MemberStack) {
-      try {
-        window.MemberStack.openModal("LOGIN");
-      } catch (err) {
-        window.MemberStack.openModal();
-      }
-    }
-  };
-
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-slate-950 to-emerald-900 overflow-hidden px-4">
       {/* Glow background */}
@@ -63,31 +52,11 @@ const Hero: React.FC = () => {
 
           <a
             href="#"
-            onClick={openLogin}
+            data-ms-modal="login"
             className="rounded-full border border-emerald-500 px-8 py-3 text-sm font-semibold text-emerald-300 bg-black/40 hover:bg-black/60 transition"
           >
             Member Login
           </a>
         </div>
 
-        {/* Stats */}
-        <div className="grid w-full max-w-3xl grid-cols-1 gap-6 sm:grid-cols-3 text-sm mx-auto mb-10">
-          <div>
-            <p className="text-3xl font-bold text-emerald-400">15,000+</p>
-            <p className="text-slate-300 mt-1">Compounds Analyzed</p>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-emerald-400">94%</p>
-            <p className="text-slate-300 mt-1">Safety Accuracy</p>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-emerald-400">24/7</p>
-            <p className="text-slate-300 mt-1">AI Availability</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-export default Hero;
+        {/* Stats*
