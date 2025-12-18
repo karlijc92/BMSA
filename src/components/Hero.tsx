@@ -42,28 +42,13 @@ const Hero: React.FC = () => {
             Get Started
           </a>
 
+          {/* ✅ This will ALWAYS work: go to /login page */}
           <a
-            href="#"
-            data-ms-modal="login"
+            href="/login"
             className="rounded-full border border-emerald-500 px-8 py-3 text-sm font-semibold text-emerald-300 bg-black/40 transition hover:bg-black/60"
           >
             Member Login
           </a>
-        </div>
-
-        <div className="grid w-full max-w-3xl grid-cols-1 gap-6 sm:grid-cols-3 text-sm mx-auto mb-10">
-          <div>
-            <p className="text-3xl font-bold text-emerald-400">15,000+</p>
-            <p className="text-slate-300 mt-1">Compounds Analyzed</p>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-emerald-400">94%</p>
-            <p className="text-slate-300 mt-1">Safety Accuracy</p>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-emerald-400">24/7</p>
-            <p className="text-slate-300 mt-1">AI Availability</p>
-          </div>
         </div>
       </div>
     </section>
