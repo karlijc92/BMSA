@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, User, LogOut } from "lucide-react";
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function Navigation() {
   const location = useLocation();
   const navigate = useNavigate();
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<any>(null);
-  
-  const isHomePage = location.pathname === '/';
-  
+
+  const isHomePage = location.pathname === "/";
+
   useEffect(() => {
     // Check authentication status
     if (window.MemberStack) {
@@ -19,8 +20,14 @@ export default function Navigation() {
         if (member) {
           setIsAuthenticated(true);
           setUser(member);
+        } else {
+          setIsAuthenticated(false);
+          setUser(null);
         }
       });
+    } else {
+      setIsAuthenticated(false);
+      setUser(null);
     }
   }, [location]);
 
@@ -29,22 +36,28 @@ export default function Navigation() {
   };
 
   const handleLogin = () => {
-    if (window.MemberStack) {
+    if (!window.MemberStack) return;
+
+    // Try to open the login modal specifically (best case),
+    // otherwise fall back to default modal open.
+    try {
+      window.MemberStack.openModal("LOGIN");
+    } catch (e) {
       window.MemberStack.openModal();
     }
   };
 
   const handleLogout = () => {
-    if (window.MemberStack) {
-      window.MemberStack.logout();
-      setIsAuthenticated(false);
-      setUser(null);
-      navigate('/');
-    }
+    if (!window.MemberStack) return;
+
+    window.MemberStack.logout();
+    setIsAuthenticated(false);
+    setUser(null);
+    navigate("/");
   };
 
-  const handleDashboard = () => {
-    navigate('/dashboard');
+  const handleProfile = () => {
+    navigate("/profile");
   };
 
   if (isHomePage) {
@@ -63,22 +76,21 @@ export default function Navigation() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          
-          <div className="text-emerald-400 font-bold text-lg">
-            BMSA
-          </div>
-          
+
+          <div className="text-emerald-400 font-bold text-lg">BMSA</div>
+
           <div className="flex items-center gap-2">
             {isAuthenticated ? (
               <>
                 <Button
-                  onClick={handleDashboard}
+                  onClick={handleProfile}
                   variant="ghost"
                   className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10"
                 >
                   <User className="w-4 h-4 mr-2" />
-                  Dashboard
+                  Profile
                 </Button>
+
                 <Button
                   onClick={handleLogout}
                   variant="ghost"
