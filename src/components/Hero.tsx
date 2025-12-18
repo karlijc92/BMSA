@@ -1,6 +1,17 @@
 import React from "react";
 
 const Hero: React.FC = () => {
+  const openLogin = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (window.MemberStack) {
+      try {
+        window.MemberStack.openModal("LOGIN");
+      } catch (err) {
+        window.MemberStack.openModal();
+      }
+    }
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-slate-950 to-emerald-900 overflow-hidden px-4">
       {/* Glow background */}
@@ -51,7 +62,8 @@ const Hero: React.FC = () => {
           </a>
 
           <a
-            href="/profile"
+            href="#"
+            onClick={openLogin}
             className="rounded-full border border-emerald-500 px-8 py-3 text-sm font-semibold text-emerald-300 bg-black/40 hover:bg-black/60 transition"
           >
             Member Login
@@ -79,4 +91,3 @@ const Hero: React.FC = () => {
 };
 
 export default Hero;
-
