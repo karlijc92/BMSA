@@ -1,18 +1,14 @@
 import React from "react";
 
 function openMemberLogin() {
-  // If Memberstack is already ready, open immediately
-  // Memberstack v2 exposes $memberstackDom + $memberstackReady
   const w = window as any;
 
   const tryOpen = () => {
-    // Preferred (Memberstack DOM package)
     if (w.$memberstackDom && typeof w.$memberstackDom.openModal === "function") {
       w.$memberstackDom.openModal("LOGIN");
       return true;
     }
 
-    // Fallback (older style)
     if (w.MemberStack && typeof w.MemberStack.openModal === "function") {
       w.MemberStack.openModal();
       return true;
@@ -21,7 +17,6 @@ function openMemberLogin() {
     return false;
   };
 
-  // If ready, open now
   if (w.$memberstackReady === true) {
     if (!tryOpen()) {
       alert("Login system not loaded yet. Please refresh and try again.");
@@ -29,7 +24,6 @@ function openMemberLogin() {
     return;
   }
 
-  // If not ready yet, wait for the Memberstack ready event ONE time, then open.
   const onReady = () => {
     document.removeEventListener("memberstack.ready", onReady);
     if (!tryOpen()) {
@@ -39,7 +33,47 @@ function openMemberLogin() {
 
   document.addEventListener("memberstack.ready", onReady);
 
-  // Last-resort: try again after a short delay (covers slow loads)
+  setTimeout(() => {
+    if (w.$memberstackReady === true) {
+      document.removeEventListener("memberstack.ready", onReady);
+      tryOpen();
+    }
+  }, 1200);
+}
+
+function openMemberSignup() {
+  const w = window as any;
+
+  const tryOpen = () => {
+    if (w.$memberstackDom && typeof w.$memberstackDom.openModal === "function") {
+      w.$memberstackDom.openModal("SIGNUP");
+      return true;
+    }
+
+    if (w.MemberStack && typeof w.MemberStack.openModal === "function") {
+      w.MemberStack.openModal();
+      return true;
+    }
+
+    return false;
+  };
+
+  if (w.$memberstackReady === true) {
+    if (!tryOpen()) {
+      alert("Signup system not loaded yet. Please refresh and try again.");
+    }
+    return;
+  }
+
+  const onReady = () => {
+    document.removeEventListener("memberstack.ready", onReady);
+    if (!tryOpen()) {
+      alert("Signup system not loaded yet. Please refresh and try again.");
+    }
+  };
+
+  document.addEventListener("memberstack.ready", onReady);
+
   setTimeout(() => {
     if (w.$memberstackReady === true) {
       document.removeEventListener("memberstack.ready", onReady);
@@ -62,21 +96,23 @@ const Hero: React.FC = () => {
         </p>
 
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight mb-6">
-          Black Market <span className="text-emerald-400">Supplement Advisor</span>
+          Black Market{" "}
+          <span className="text-emerald-400">Supplement Advisor</span>
         </h1>
 
         <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto mb-10">
-          Navigate the underground supplement world safely with AI-powered guidance, research-backed insights,
-          and harm reduction focused answers.
+          Navigate the underground supplement world safely with AI-powered
+          guidance, research-backed insights, and harm reduction focused answers.
         </p>
 
         <div className="flex flex-wrap justify-center gap-4 mb-12">
-          <a
-            href="/subscribe"
+          <button
+            type="button"
+            onClick={openMemberSignup}
             className="rounded-full bg-emerald-500 px-8 py-3 text-sm font-semibold text-black shadow-lg shadow-emerald-500/40 hover:bg-emerald-400 transition"
           >
             Get Started
-          </a>
+          </button>
 
           <button
             type="button"
