@@ -1,87 +1,5 @@
 import React from "react";
 
-function openMemberLogin() {
-  const w = window as any;
-
-  const tryOpen = () => {
-    if (w.$memberstackDom && typeof w.$memberstackDom.openModal === "function") {
-      w.$memberstackDom.openModal("LOGIN");
-      return true;
-    }
-
-    if (w.MemberStack && typeof w.MemberStack.openModal === "function") {
-      w.MemberStack.openModal();
-      return true;
-    }
-
-    return false;
-  };
-
-  if (w.$memberstackReady === true) {
-    if (!tryOpen()) {
-      alert("Login system not loaded yet. Please refresh and try again.");
-    }
-    return;
-  }
-
-  const onReady = () => {
-    document.removeEventListener("memberstack.ready", onReady);
-    if (!tryOpen()) {
-      alert("Login system not loaded yet. Please refresh and try again.");
-    }
-  };
-
-  document.addEventListener("memberstack.ready", onReady);
-
-  setTimeout(() => {
-    if (w.$memberstackReady === true) {
-      document.removeEventListener("memberstack.ready", onReady);
-      tryOpen();
-    }
-  }, 1200);
-}
-
-function openMemberSignup() {
-  const w = window as any;
-
-  const tryOpen = () => {
-    if (w.$memberstackDom && typeof w.$memberstackDom.openModal === "function") {
-      w.$memberstackDom.openModal("SIGNUP");
-      return true;
-    }
-
-    if (w.MemberStack && typeof w.MemberStack.openModal === "function") {
-      w.MemberStack.openModal();
-      return true;
-    }
-
-    return false;
-  };
-
-  if (w.$memberstackReady === true) {
-    if (!tryOpen()) {
-      alert("Signup system not loaded yet. Please refresh and try again.");
-    }
-    return;
-  }
-
-  const onReady = () => {
-    document.removeEventListener("memberstack.ready", onReady);
-    if (!tryOpen()) {
-      alert("Signup system not loaded yet. Please refresh and try again.");
-    }
-  };
-
-  document.addEventListener("memberstack.ready", onReady);
-
-  setTimeout(() => {
-    if (w.$memberstackReady === true) {
-      document.removeEventListener("memberstack.ready", onReady);
-      tryOpen();
-    }
-  }, 1200);
-}
-
 const Hero: React.FC = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-slate-950 to-emerald-900 overflow-hidden px-4">
@@ -108,7 +26,7 @@ const Hero: React.FC = () => {
         <div className="flex flex-wrap justify-center gap-4 mb-12">
           <button
             type="button"
-            onClick={openMemberSignup}
+            onClick={() => (window.location.href = "/login")}
             className="rounded-full bg-emerald-500 px-8 py-3 text-sm font-semibold text-black shadow-lg shadow-emerald-500/40 hover:bg-emerald-400 transition"
           >
             Get Started
@@ -116,7 +34,7 @@ const Hero: React.FC = () => {
 
           <button
             type="button"
-            onClick={openMemberLogin}
+            onClick={() => (window.location.href = "/login")}
             className="rounded-full border border-emerald-500 px-8 py-3 text-sm font-semibold text-emerald-300 bg-black/40 hover:bg-black/60 transition"
           >
             Member Login
