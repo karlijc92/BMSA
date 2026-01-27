@@ -3,6 +3,7 @@ import Features from "@/components/Features";
 import HowItWorks from "@/components/HowItWorks";
 import Pricing from "@/components/Pricing";
 import DisclaimerFooter from "@/components/DisclaimerFooter";
+import Footer from "@/components/Footer";
 
 export default function Index() {
   return (
@@ -12,6 +13,7 @@ export default function Index() {
       <HowItWorks />
       <Pricing />
       <DisclaimerFooter />
+      <Footer />
     </div>
   );
 }
