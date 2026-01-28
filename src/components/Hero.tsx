@@ -24,21 +24,21 @@ const Hero: React.FC = () => {
         </p>
 
         <div className="flex flex-wrap justify-center gap-4 mb-12">
-          {/* GET STARTED → SIGN UP */}
-          <a
-            href="https://auth.memberstack.com/sign-up/app_cmc7pqrh800ad0wp06wiq9x2w"
+          {/* GET STARTED → SIGNUP MODAL */}
+          <button
+            data-ms-modal="signup"
             className="rounded-full bg-emerald-500 px-8 py-3 text-sm font-semibold text-black shadow-lg shadow-emerald-500/40 hover:bg-emerald-400 transition"
           >
             Get Started
-          </a>
+          </button>
 
-          {/* MEMBER LOGIN → LOG IN */}
-          <a
-            href="https://auth.memberstack.com/sign-in/app_cmc7pqrh800ad0wp06wiq9x2w"
+          {/* MEMBER LOGIN → LOGIN MODAL */}
+          <button
+            data-ms-modal="login"
             className="rounded-full border border-emerald-500 px-8 py-3 text-sm font-semibold text-emerald-300 bg-black/40 hover:bg-black/60 transition"
           >
             Member Login
-          </a>
+          </button>
         </div>
       </div>
     </section>
