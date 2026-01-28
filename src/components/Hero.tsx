@@ -26,15 +26,15 @@ const Hero: React.FC = () => {
         <div className="flex flex-wrap justify-center gap-4 mb-12">
           {/* GET STARTED → SIGN UP */}
           <a
-            href="https://auth.memberstack.com/signup/app_cmc7pqrh800ad0wp06wiq9x2w"
+            href="https://auth.memberstack.com/sign-up/app_cmc7pqrh800ad0wp06wiq9x2w"
             className="rounded-full bg-emerald-500 px-8 py-3 text-sm font-semibold text-black shadow-lg shadow-emerald-500/40 hover:bg-emerald-400 transition"
           >
             Get Started
           </a>
 
-          {/* MEMBER LOGIN → LOGIN */}
+          {/* MEMBER LOGIN → LOG IN */}
           <a
-            href="https://auth.memberstack.com/login/app_cmc7pqrh800ad0wp06wiq9x2w"
+            href="https://auth.memberstack.com/sign-in/app_cmc7pqrh800ad0wp06wiq9x2w"
             className="rounded-full border border-emerald-500 px-8 py-3 text-sm font-semibold text-emerald-300 bg-black/40 hover:bg-black/60 transition"
           >
             Member Login
