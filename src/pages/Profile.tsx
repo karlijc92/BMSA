@@ -1,31 +1,64 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemberstack } from "@memberstack/react";
 import DisclaimerFooter from "@/components/DisclaimerFooter";
 
 type GoalType = "Cut" | "Bulk" | "Recomp" | "Health" | "Performance" | "Other";
+
+type ReminderType = "Supplement" | "Training" | "Hydration" | "Sleep" | "Meal" | "Other";
 
 interface SavedStackItem {
   id: string;
   name: string;
   purpose: string;
+  dose: string;
   timing: string;
+  cycle: string;
+  vendor: string;
+  active: boolean;
   notes: string;
   createdAt: number;
+  updatedAt?: number;
 }
 
 interface ReminderItem {
   id: string;
   title: string;
+  type: ReminderType;
   frequency: string;
+  timeOfDay: string;
+  enabled: boolean;
   notes: string;
+  createdAt: number;
+  updatedAt?: number;
+}
+
+interface ProgressSnapshot {
+  id: string;
+  date: string; // YYYY-MM-DD
+  weight: string;
+  bodyFat: string;
+  waist: string;
+  strengthNotes: string; // PRs, lifts, etc.
+  recoveryNotes: string; // sleep, soreness, etc.
   createdAt: number;
 }
 
+interface ProfileBasics {
+  trainingDaysPerWeek: string;
+  sleepTargetHours: string;
+  hydrationTarget: string; // e.g. "3L" or "100oz"
+  stepTarget: string; // e.g. "8,000"
+  nutritionFocus: string; // e.g. "High protein"
+}
+
 const LS_KEYS = {
-  notes: "bmsa_profile_notes_v1",
-  stacks: "bmsa_profile_stacks_v1",
-  goals: "bmsa_profile_goals_v1",
-  contraindications: "bmsa_profile_contra_v1",
-  reminders: "bmsa_profile_reminders_v1",
+  notes: "bmsa_profile_notes_v2",
+  goals: "bmsa_profile_goals_v2",
+  contraindications: "bmsa_profile_contra_v2",
+  stacks: "bmsa_profile_stacks_v2",
+  reminders: "bmsa_profile_reminders_v2",
+  progress: "bmsa_profile_progress_v1",
+  basics: "bmsa_profile_basics_v1",
 };
 
 function uid() {
@@ -41,199 +74,96 @@ function safeParse<T>(raw: string | null, fallback: T): T {
   }
 }
 
+function todayISO() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export default function Profile() {
-  const BILLING_SUPPORT_EMAIL = "proofmodepro365@gmail.com";
-  const FEATURE_EMAIL = "proofmodepro365@gmail.com";
-  const STRIPE_PORTAL =
-    "https://billing.stripe.com/p/login/bJe5kEgoZ64qc109nVeME00";
+  /* =========================
+     AUTH / ACCESS
+     ========================= */
+  const { member, status } = useMemberstack();
 
-  const [notes, setNotes] = useState<string>("");
-  const [goalType, setGoalType] = useState<GoalType>("Health");
-  const [goalText, setGoalText] = useState<string>("");
-  const [contra, setContra] = useState<string>("");
-
-  const [stacks, setStacks] = useState<SavedStackItem[]>([]);
-  const [stackName, setStackName] = useState("");
-  const [stackPurpose, setStackPurpose] = useState("");
-  const [stackTiming, setStackTiming] = useState("");
-  const [stackNotes, setStackNotes] = useState("");
-
-  const [reminders, setReminders] = useState<ReminderItem[]>([]);
-  const [remTitle, setRemTitle] = useState("");
-  const [remFreq, setRemFreq] = useState("");
-  const [remNotes, setRemNotes] = useState("");
-
-  const [featureOpen, setFeatureOpen] = useState(false);
-  const [featTitle, setFeatTitle] = useState("");
-  const [featDetails, setFeatDetails] = useState("");
+  // If you later have Hosted Auth URLs, replace these with those URLs.
+  // Keeping these as simple paths avoids changing design.
+  const LOGIN_URL = "/login";
+  const SIGNUP_URL = "/signup";
 
   useEffect(() => {
-    setNotes(safeParse<string>(localStorage.getItem(LS_KEYS.notes), ""));
-    setGoalType(
-      safeParse<GoalType>(localStorage.getItem(LS_KEYS.goals), "Health")
+    // If auth is ready and no member exists, show login/signup UI
+    // (Do NOT hard redirect here — we show a clean access screen so you can control it.)
+  }, [status, member]);
+
+  if (status !== "ready") {
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+        <div className="max-w-md w-full border border-emerald-500/30 rounded-xl p-6 bg-slate-950">
+          <div className="text-2xl font-bold mb-2">Loading Profile…</div>
+          <p className="text-slate-300">
+            Please wait a second while your account loads.
+          </p>
+        </div>
+      </main>
     );
-    setGoalText(
-      safeParse<string>(localStorage.getItem(`${LS_KEYS.goals}_text`), "")
-    );
-    setContra(
-      safeParse<string>(localStorage.getItem(LS_KEYS.contraindications), "")
-    );
-    setStacks(
-      safeParse<SavedStackItem[]>(localStorage.getItem(LS_KEYS.stacks), [])
-    );
-    setReminders(
-      safeParse<ReminderItem[]>(localStorage.getItem(LS_KEYS.reminders), [])
-    );
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem(LS_KEYS.notes, JSON.stringify(notes));
-  }, [notes]);
-
-  useEffect(() => {
-    localStorage.setItem(LS_KEYS.goals, JSON.stringify(goalType));
-    localStorage.setItem(`${LS_KEYS.goals}_text`, JSON.stringify(goalText));
-  }, [goalType, goalText]);
-
-  useEffect(() => {
-    localStorage.setItem(LS_KEYS.contraindications, JSON.stringify(contra));
-  }, [contra]);
-
-  useEffect(() => {
-    localStorage.setItem(LS_KEYS.stacks, JSON.stringify(stacks));
-  }, [stacks]);
-
-  useEffect(() => {
-    localStorage.setItem(LS_KEYS.reminders, JSON.stringify(reminders));
-  }, [reminders]);
-
-  const stackCount = stacks.length;
-  const reminderCount = reminders.length;
-
-  const goalLabel = useMemo(() => {
-    return goalType === "Other" ? "Other goal" : goalType;
-  }, [goalType]);
-
-  function clearAll() {
-    if (!confirm("Clear ALL saved Profile data on this device?")) return;
-    setNotes("");
-    setGoalType("Health");
-    setGoalText("");
-    setContra("");
-    setStacks([]);
-    setReminders([]);
-    Object.values(LS_KEYS).forEach((k) => localStorage.removeItem(k));
-    localStorage.removeItem(`${LS_KEYS.goals}_text`);
   }
 
-  function openFeatureModal() {
-    setFeatTitle("");
-    setFeatDetails("");
-    setFeatureOpen(true);
-  }
+  if (!member) {
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+        <div className="max-w-md w-full border border-emerald-500/30 rounded-xl p-6 bg-slate-950">
+          <div className="text-2xl font-bold mb-2">
+            Please sign in to access your <span className="text-emerald-400">Profile</span>
+          </div>
+          <p className="text-slate-300 mb-5">
+            This page is for members only. Sign in (or create an account) to view your saved stacks,
+            reminders, and progress.
+          </p>
 
-  function sendFeatureRequest() {
-    const title = featTitle.trim() || "Feature Request";
-    const details = featDetails.trim();
-
-    const subject = encodeURIComponent(`[BMSA] ${title}`);
-    const body = encodeURIComponent(
-      `Feature request:\n\n${details}\n\n---\nSent from BMSA Profile`
-    );
-
-    window.location.href = `mailto:${FEATURE_EMAIL}?subject=${subject}&body=${body}`;
-    setFeatureOpen(false);
-  }
-
-  return (
-    <main className="min-h-screen bg-black text-white">
-      <section className="max-w-5xl mx-auto px-4 py-10">
-        <div className="flex justify-between mb-6">
-          <button
-            onClick={() => window.history.back()}
-            className="text-emerald-400"
-          >
-            ← Back
-          </button>
-          <div className="flex gap-4">
-            <a href="/subscription-ai" className="text-emerald-400">
-              AI Advisor
+          <div className="flex gap-3">
+            <a
+              href={LOGIN_URL}
+              className="inline-block rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
+            >
+              Sign In
             </a>
-            <button onClick={openFeatureModal} className="text-emerald-400">
-              Suggest a Feature
+            <a
+              href={SIGNUP_URL}
+              className="inline-block rounded-lg border border-emerald-500/40 px-4 py-2 text-emerald-300 hover:bg-emerald-500/10"
+            >
+              Create Account
+            </a>
+          </div>
+
+          <div className="mt-4">
+            <button onClick={() => window.history.back()} className="text-emerald-400">
+              ← Back
             </button>
           </div>
-        </div>
 
-        <h1 className="text-4xl font-bold mb-6">
-          Your <span className="text-emerald-400">Profile</span>
-        </h1>
-
-        {/* STRIPE BUTTON */}
-        <a
-          href={STRIPE_PORTAL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mb-6 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
-        >
-          Manage Billing / Cancel Subscription
-        </a>
-
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          <div className="p-4 border border-emerald-500/30 rounded-xl">
-            <p>Saved stacks</p>
-            <p className="text-2xl">{stackCount}</p>
-          </div>
-          <div className="p-4 border border-emerald-500/30 rounded-xl">
-            <p>Reminders</p>
-            <p className="text-2xl">{reminderCount}</p>
-          </div>
-          <div className="p-4 border border-emerald-500/30 rounded-xl">
-            <p>Billing help</p>
-            <a
-              href={`mailto:${BILLING_SUPPORT_EMAIL}`}
-              className="text-emerald-400"
-            >
-              {BILLING_SUPPORT_EMAIL}
-            </a>
+          <div className="mt-6">
+            <DisclaimerFooter />
           </div>
         </div>
+      </main>
+    );
+  }
 
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="w-full bg-slate-900 border border-slate-700 p-3 rounded"
-          placeholder="Personal notes..."
-          rows={8}
-        />
+  /* =========================
+     SETTINGS
+     ========================= */
+  const BILLING_SUPPORT_EMAIL = "proofmodepro365@gmail.com";
+  const FEATURE_EMAIL = "proofmodepro365@gmail.com";
+  const STRIPE_PORTAL = "https://billing.stripe.com/p/login/bJe5kEgoZ64qc109nVeME00";
 
-        {featureOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/80">
-            <div className="bg-slate-900 p-5 rounded-lg w-full max-w-lg">
-              <input
-                value={featTitle}
-                onChange={(e) => setFeatTitle(e.target.value)}
-                placeholder="Title"
-                className="w-full p-2 mb-2 bg-black border"
-              />
-              <textarea
-                value={featDetails}
-                onChange={(e) => setFeatDetails(e.target.value)}
-                rows={6}
-                className="w-full p-2 bg-black border"
-              />
-              <button
-                onClick={sendFeatureRequest}
-                className="mt-3 bg-emerald-500 px-4 py-2 rounded"
-              >
-                Send
-              </button>
-            </div>
-          </div>
-        )}
+  /* =========================
+     STATE
+     ========================= */
+  const [notes, setNotes] = useState<string>("");
 
-        <DisclaimerFooter />
-      </section>
-    </main>
-  );
-}
+  const [goalType, setGoalType] = useState<GoalType>("Health");
+  const [goalText, setGoalText] = useState<string>("");
+  const [goalTimeline, setGoalTimeline] = useState<string>("");
