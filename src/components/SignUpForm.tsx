@@ -1,18 +1,23 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Eye, EyeOff, User, Mail, Lock, AlertCircle } from "lucide-react";
-import { airtableService } from "@/lib/airtable";
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle } from "lucide-react";
 
 export default function SignUpForm() {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
-    password: ""
+    password: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -21,129 +26,106 @@ export default function SignUpForm() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (error) setError("");
-  };
-
-  const validateForm = () => {
-    if (!formData.firstName.trim()) return setError("First name required"), false;
-    if (!formData.lastName.trim()) return setError("Last name required"), false;
-    if (!formData.email.trim()) return setError("Email required"), false;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-      return setError("Enter a valid email"), false;
-    if (!formData.password || formData.password.length < 8)
-      return setError("Password must be at least 8 characters"), false;
-    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
-
     setIsLoading(true);
-    setError("");
 
     try {
-      const w = window as any;
-      if (!w.$memberstackDom) throw new Error("Auth not ready");
+      // TEMP AUTH: mark user as logged in
+      localStorage.setItem("bmsa_logged_in", "true");
+      localStorage.setItem("bmsa_user_email", formData.email);
 
-      await w.$memberstackDom.signup({
-        email: formData.email,
-        password: formData.password,
-        customFields: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-        }
-      });
-
-      try {
-        await airtableService.createUserRecord({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          createdAt: new Date().toISOString(),
-          subscriptionPlan: "Pending",
-          subscriptionStatus: "Active"
-        });
-      } catch {}
-
+      // AUTH-FIRST FLOW → send to subscribe
       window.location.href = "/subscribe";
-    } catch (err: any) {
-      setError(err.message || "Signup failed. Try again.");
+    } catch (err) {
+      setError("Signup failed. Try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-gray-800/50 border-emerald-500/20">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-white">Join BMSA</CardTitle>
-        <CardDescription className="text-gray-300">
+    <Card className="w-full max-w-md bg-slate-950 border border-emerald-700/40">
+      <CardHeader>
+        <CardTitle className="text-white text-center">Join BMSA</CardTitle>
+        <CardDescription className="text-gray-400 text-center">
           Create your account to access AI-powered supplement guidance
         </CardDescription>
       </CardHeader>
 
       <CardContent>
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <Alert className="bg-red-900/20 border-red-500/30">
-              <AlertCircle className="h-4 w-4 text-red-400" />
-              <AlertDescription className="text-red-300">{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="text-gray-300">First Name</Label>
-              <Input name="firstName" value={formData.firstName} onChange={handleInputChange} />
+          <div className="flex gap-3">
+            <div className="w-1/2">
+              <Label>First Name</Label>
+              <Input
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                required
+              />
             </div>
-            <div>
-              <Label className="text-gray-300">Last Name</Label>
-              <Input name="lastName" value={formData.lastName} onChange={handleInputChange} />
+            <div className="w-1/2">
+              <Label>Last Name</Label>
+              <Input
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                required
+              />
             </div>
           </div>
 
           <div>
-            <Label className="text-gray-300">Email</Label>
-            <Input name="email" type="email" value={formData.email} onChange={handleInputChange} />
+            <Label>Email</Label>
+            <Input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+            />
           </div>
 
           <div>
-            <Label className="text-gray-300">Password</Label>
+            <Label>Password</Label>
             <div className="relative">
               <Input
-                name="password"
                 type={showPassword ? "text" : "password"}
+                name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="pr-10"
+                required
               />
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                className="absolute right-0 top-0"
                 onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
               >
-                {showPassword ? <EyeOff /> : <Eye />}
-              </Button>
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
-          <Button type="submit" disabled={isLoading} className="w-full bg-emerald-600">
-            {isLoading ? "Creating..." : "Create Account"}
+          <Button
+            type="submit"
+            className="w-full bg-emerald-600 hover:bg-emerald-700"
+            disabled={isLoading}
+          >
+            {isLoading ? "Creating Account..." : "Create Account"}
           </Button>
         </form>
-
-        <p className="mt-4 text-center text-sm text-gray-400">
-          Already have an account?{" "}
-          <button
-            onClick={() => (window as any).$memberstackDom.openModal("LOGIN")}
-            className="text-emerald-400 hover:underline"
-          >
-            Sign in
-          </button>
-        </p>
       </CardContent>
     </Card>
   );
