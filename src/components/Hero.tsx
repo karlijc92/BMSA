@@ -1,6 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const Hero: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-slate-950 to-emerald-900 overflow-hidden px-4">
       <div className="pointer-events-none absolute inset-0 opacity-40">
@@ -24,21 +27,19 @@ const Hero: React.FC = () => {
         </p>
 
         <div className="flex flex-wrap justify-center gap-4 mb-12">
-          {/* Get Started → Subscribe */}
-          <a
-            href="/subscribe"
+          <button
+            onClick={() => navigate("/signup")}
             className="rounded-full bg-emerald-500 px-8 py-3 text-sm font-semibold text-black shadow-lg shadow-emerald-500/40 hover:bg-emerald-400 transition"
           >
             Get Started
-          </a>
+          </button>
 
-          {/* Member Login → Profile (Memberstack will intercept if not logged in) */}
-          <a
-            href="/profile"
+          <button
+            onClick={() => navigate("/signup")}
             className="rounded-full border border-emerald-500 px-8 py-3 text-sm font-semibold text-emerald-300 bg-black/40 hover:bg-black/60 transition"
           >
             Member Login
-          </a>
+          </button>
         </div>
       </div>
     </section>
