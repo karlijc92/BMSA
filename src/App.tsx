@@ -10,6 +10,7 @@ import Profile from "./pages/Profile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 const queryClient = new QueryClient();
 
@@ -19,10 +20,12 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
+
           <Route path="/subscribe" element={<Subscribe />} />
           <Route path="/subscription-ai" element={<SubscriptionAI />} />
-
-          <Route path="/login" element={<Login />} />
 
           <Route path="/profile" element={<Profile />} />
           <Route path="/privacy" element={<Privacy />} />
