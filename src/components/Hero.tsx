@@ -1,6 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
+console.log("HERO FROM REPO IS RENDERING");
+
 const Hero: React.FC = () => {
   const navigate = useNavigate();
 
