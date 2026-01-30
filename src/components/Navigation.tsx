@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, User, LogOut } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -8,27 +8,12 @@ export default function Navigation() {
   const navigate = useNavigate();
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<any>(null);
 
   const isHomePage = location.pathname === "/";
 
   useEffect(() => {
-    // Check authentication status
-    if (window.MemberStack) {
-      window.MemberStack.onReady.then(() => {
-        const member = window.MemberStack.getCurrentMember();
-        if (member) {
-          setIsAuthenticated(true);
-          setUser(member);
-        } else {
-          setIsAuthenticated(false);
-          setUser(null);
-        }
-      });
-    } else {
-      setIsAuthenticated(false);
-      setUser(null);
-    }
+    const loggedIn = localStorage.getItem("bmsa_logged_in") === "true";
+    setIsAuthenticated(loggedIn);
   }, [location]);
 
   const handleBack = () => {
@@ -36,23 +21,13 @@ export default function Navigation() {
   };
 
   const handleLogin = () => {
-    if (!window.MemberStack) return;
-
-    // Try to open the login modal specifically (best case),
-    // otherwise fall back to default modal open.
-    try {
-      window.MemberStack.openModal("LOGIN");
-    } catch (e) {
-      window.MemberStack.openModal();
-    }
+    navigate("/signup");
   };
 
   const handleLogout = () => {
-    if (!window.MemberStack) return;
-
-    window.MemberStack.logout();
+    localStorage.removeItem("bmsa_logged_in");
+    localStorage.removeItem("bmsa_user_email");
     setIsAuthenticated(false);
-    setUser(null);
     navigate("/");
   };
 
@@ -61,7 +36,7 @@ export default function Navigation() {
   };
 
   if (isHomePage) {
-    return null; // Don't show navigation on homepage
+    return null;
   }
 
   return (
