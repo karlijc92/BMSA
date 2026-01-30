@@ -12,7 +12,6 @@ const Pricing: React.FC = () => {
         "Cutting, bulking & health optimization",
         "Harm reduction focused responses",
       ],
-      href: "https://buy.stripe.com/3cI6oI6OpdwS2qqfMjeME04",
     },
     {
       name: "Yearly Underground",
@@ -24,7 +23,6 @@ const Pricing: React.FC = () => {
         "Perfect for lifters & biohackers",
         "Priority for future feature drops",
       ],
-      href: "https://buy.stripe.com/dRm6oIgoZ3Wi1mm57FeME05",
     },
   ];
 
@@ -68,10 +66,10 @@ const Pricing: React.FC = () => {
               </ul>
 
               <a
-                href={plan.href}
+                href="/signup"
                 className="mt-auto inline-flex items-center justify-center rounded-xl bg-emerald-600 hover:bg-emerald-700 px-6 py-3 text-sm md:text-base font-semibold text-white transition-transform duration-150 hover:scale-105"
               >
-                Get Underground Access
+                Create Account
               </a>
             </div>
           ))}
