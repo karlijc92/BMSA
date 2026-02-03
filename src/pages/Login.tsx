@@ -1,29 +1,9 @@
-import { useEffect } from "react";
+import SignUpForm from "@/components/SignUpForm";
 
 export default function Login() {
-  useEffect(() => {
-    const w = window as any;
-
-    function handleAuth() {
-      window.location.href = "/subscription-ai";
-    }
-
-    if (w.$memberstackDom) {
-      w.$memberstackDom.openModal("LOGIN");
-      w.$memberstackDom.on("memberstack.auth", handleAuth);
-    } else {
-      document.addEventListener("memberstack.ready", () => {
-        w.$memberstackDom.openModal("LOGIN");
-        w.$memberstackDom.on("memberstack.auth", handleAuth);
-      });
-    }
-
-    return () => {
-      if (w.$memberstackDom) {
-        w.$memberstackDom.off("memberstack.auth", handleAuth);
-      }
-    };
-  }, []);
-
-  return null;
+  return (
+    <div className="min-h-screen bg-black flex items-center justify-center px-4">
+      <SignUpForm mode="login" />
+    </div>
+  );
 }
