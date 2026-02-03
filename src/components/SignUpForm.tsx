@@ -1,132 +1,94 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Eye, EyeOff, Mail, Lock, User, AlertCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-export default function SignUpForm() {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-  });
+type Props = {
+  mode?: "signup" | "login";
+};
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+export default function SignUpForm({ mode = "signup" }: Props) {
+  const navigate = useNavigate();
+  const isLogin = mode === "login";
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [error, setError] = useState("");
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (error) setError("");
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError("");
 
-    try {
-      // TEMP AUTH: mark user as logged in
-      localStorage.setItem("bmsa_logged_in", "true");
-      localStorage.setItem("bmsa_user_email", formData.email);
-
-      // AUTH-FIRST FLOW → send to subscribe
-      window.location.href = "/subscribe";
-    } catch (err) {
-      setError("Signup failed. Try again.");
-    } finally {
-      setIsLoading(false);
+    if (!email || !password || (!isLogin && (!firstName || !lastName))) {
+      setError("Please complete all required fields.");
+      return;
     }
+
+    // TEMP AUTH (local only — intentional)
+    localStorage.setItem("bmsa_user_email", email);
+
+    // After login/signup → go to subscribe
+    navigate("/subscribe");
   };
 
   return (
-    <Card className="w-full max-w-md bg-slate-950 border border-emerald-700/40">
-      <CardHeader>
-        <CardTitle className="text-white text-center">Join BMSA</CardTitle>
-        <CardDescription className="text-gray-400 text-center">
-          Create your account to access AI-powered supplement guidance
-        </CardDescription>
-      </CardHeader>
+    <form
+      onSubmit={handleSubmit}
+      className="w-full max-w-md bg-gradient-to-br from-slate-900 to-black border border-emerald-600/40 rounded-xl p-8 shadow-xl"
+    >
+      <h1 className="text-2xl font-bold text-white mb-2 text-center">
+        {isLogin ? "Member Login" : "Join BMSA"}
+      </h1>
 
-      <CardContent>
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+      <p className="text-gray-400 text-sm mb-6 text-center">
+        {isLogin
+          ? "Log in to access your account"
+          : "Create your account to access AI-powered supplement guidance"}
+      </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex gap-3">
-            <div className="w-1/2">
-              <Label>First Name</Label>
-              <Input
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="w-1/2">
-              <Label>Last Name</Label>
-              <Input
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-          </div>
+      {!isLogin && (
+        <div className="flex gap-3 mb-4">
+          <input
+            placeholder="First Name"
+            className="flex-1 rounded-md bg-black border border-gray-700 px-3 py-2 text-white"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+          />
+          <input
+            placeholder="Last Name"
+            className="flex-1 rounded-md bg-black border border-gray-700 px-3 py-2 text-white"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
+        </div>
+      )}
 
-          <div>
-            <Label>Email</Label>
-            <Input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
+      <input
+        placeholder="Email"
+        type="email"
+        className="w-full rounded-md bg-black border border-gray-700 px-3 py-2 text-white mb-4"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
 
-          <div>
-            <Label>Password</Label>
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
+      <input
+        placeholder="Password"
+        type="password"
+        className="w-full rounded-md bg-black border border-gray-700 px-3 py-2 text-white mb-4"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
 
-          <Button
-            type="submit"
-            className="w-full bg-emerald-600 hover:bg-emerald-700"
-            disabled={isLoading}
-          >
-            {isLoading ? "Creating Account..." : "Create Account"}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      {error && (
+        <p className="text-red-400 text-sm mb-3 text-center">{error}</p>
+      )}
+
+      <button
+        type="submit"
+        className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold py-2 rounded-md transition"
+      >
+        {isLogin ? "Log In" : "Create Account"}
+      </button>
+    </form>
   );
 }
