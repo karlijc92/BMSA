@@ -11,6 +11,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Success from "./pages/Success"; // ✅ ADD THIS
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ export default function App() {
 
           <Route path="/subscribe" element={<Subscribe />} />
           <Route path="/subscription-ai" element={<SubscriptionAI />} />
+          <Route path="/success" element={<Success />} /> {/* ✅ ADD THIS */}
 
           <Route path="/profile" element={<Profile />} />
           <Route path="/privacy" element={<Privacy />} />
