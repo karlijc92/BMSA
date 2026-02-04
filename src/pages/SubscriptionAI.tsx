@@ -7,6 +7,10 @@ interface ChatMessage {
 }
 
 export default function SubscriptionAI() {
+  // Auth/subscription flags (temporary + intentional)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -21,11 +25,25 @@ export default function SubscriptionAI() {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    // These are the keys your current auth flow uses
+    const loggedIn = localStorage.getItem("bmsa_logged_in") === "true";
+
+    // We are using this subscription flag for gating
+    const subscribed = localStorage.getItem("bmsa_is_subscribed") === "true";
+
+    setIsLoggedIn(loggedIn);
+    setIsSubscribed(subscribed);
+  }, []);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+
+    // Hard gate: never allow chat submit unless subscribed
+    if (!isLoggedIn || !isSubscribed) return;
 
     const trimmed = input.trim();
     if (!trimmed) return;
@@ -93,9 +111,57 @@ export default function SubscriptionAI() {
           Black Market Supplement Advisor
         </h1>
 
-        {/* MEMBERSTACK GATED CONTENT */}
-        <div data-ms-content="underground-supplement-advisor">
-          <div className="border border-emerald-500/40 rounded-xl p-4 h-[480px] flex flex-col bg-slate-900/60">
+        {/* GATE: Not logged in */}
+        {!isLoggedIn && (
+          <div className="mt-6 border border-emerald-500/40 rounded-xl p-5 bg-slate-900/60">
+            <p className="text-sm text-gray-200">
+              You need to be logged in to access the advisor.
+            </p>
+
+            <div className="mt-4 flex gap-2">
+              <a
+                href="/signup"
+                className="rounded-lg px-4 py-2 text-sm font-semibold bg-emerald-500 text-black"
+              >
+                Sign up
+              </a>
+              <a
+                href="/login"
+                className="rounded-lg px-4 py-2 text-sm border border-slate-600"
+              >
+                Log in
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* GATE: Logged in but not subscribed */}
+        {isLoggedIn && !isSubscribed && (
+          <div className="mt-6 border border-emerald-500/40 rounded-xl p-5 bg-slate-900/60">
+            <p className="text-sm text-gray-200">
+              You need an active subscription to access the advisor.
+            </p>
+
+            <div className="mt-4 flex gap-2">
+              <a
+                href="/subscribe"
+                className="rounded-lg px-4 py-2 text-sm font-semibold bg-emerald-500 text-black"
+              >
+                Subscribe
+              </a>
+              <a
+                href="/profile"
+                className="rounded-lg px-4 py-2 text-sm border border-slate-600"
+              >
+                Go to Profile
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* AI CHAT: Only if logged in + subscribed */}
+        {isLoggedIn && isSubscribed && (
+          <div className="mt-6 border border-emerald-500/40 rounded-xl p-4 h-[480px] flex flex-col bg-slate-900/60">
             <div className="flex-1 overflow-y-auto space-y-3 pr-1">
               {messages.map((m, idx) => (
                 <div
@@ -145,32 +211,7 @@ export default function SubscriptionAI() {
 
             {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
           </div>
-        </div>
-
-        {/* Helper text + Memberstack modals */}
-        <div className="mt-6 text-sm text-gray-300">
-          <p>
-            If you can&apos;t see the chat above, you may need an active{" "}
-            <span className="font-semibold text-emerald-400">AIBMSA</span>{" "}
-            subscription.
-          </p>
-
-          <div className="mt-2 flex gap-2">
-            <button
-              data-ms-modal="signup"
-              className="rounded-lg px-4 py-2 text-sm font-semibold bg-emerald-500 text-black"
-            >
-              Sign up
-            </button>
-
-            <button
-              data-ms-modal="login"
-              className="rounded-lg px-4 py-2 text-sm border border-slate-600"
-            >
-              Log in
-            </button>
-          </div>
-        </div>
+        )}
 
         <DisclaimerFooter />
       </section>
