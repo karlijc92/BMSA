@@ -15,9 +15,7 @@ export default function Profile() {
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center px-4">
         <div className="max-w-md w-full border border-emerald-500/30 rounded-xl p-6 bg-black/60 text-center">
-          <h1 className="text-2xl font-bold mb-3">
-            Members Only
-          </h1>
+          <h1 className="text-2xl font-bold mb-3">Members Only</h1>
           <p className="text-slate-300 mb-6">
             You must be logged in to view your profile.
           </p>
@@ -67,8 +65,20 @@ export default function Profile() {
           </a>
         </div>
 
-        <p className="text-slate-300 mb-6">
+        <p className="text-slate-300 mb-4">
           You’re logged in. This page is private.
+        </p>
+
+        {/* NEW: Manage subscription */}
+        <p className="mb-6">
+          <a
+            href="https://billing.stripe.com/p/login"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald-400 underline"
+          >
+            Manage subscription
+          </a>
         </p>
 
         <div className="mb-8">
