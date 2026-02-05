@@ -69,10 +69,10 @@ export default function Profile() {
           You’re logged in. This page is private.
         </p>
 
-        {/* NEW: Manage subscription */}
+        {/* FIXED: Manage subscription */}
         <p className="mb-6">
           <a
-            href="https://billing.stripe.com/p/login"
+            href="https://billing.stripe.com/p/login/bJe5kEgoZ64qc109nVeME00"
             target="_blank"
             rel="noopener noreferrer"
             className="text-emerald-400 underline"
