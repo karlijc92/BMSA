@@ -6,25 +6,46 @@ const AIRTABLE_API_KEY = import.meta.env.AIRTABLE_API_KEY;
 const TABLE_NAME = "UserProfile";
 
 export default function Profile() {
+
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [email, setEmail] = useState("");
 
   const [recordId, setRecordId] = useState<string | null>(null);
 
-  const [trainingGoal, setTrainingGoal] = useState("");
+  // Identity
   const [experienceLevel, setExperienceLevel] = useState("");
+  const [enhancedStatus, setEnhancedStatus] = useState("");
+  const [trainingGoal, setTrainingGoal] = useState("");
+
+  // Body stats
+  const [weightValue, setWeightValue] = useState("");
+  const [weightUnit, setWeightUnit] = useState("lbs");
+
+  const [heightValue, setHeightValue] = useState("");
+  const [heightUnit, setHeightUnit] = useState("in");
+
+  // Training context
+  const [yearsTraining, setYearsTraining] = useState("");
+  const [competitionPrep, setCompetitionPrep] = useState("");
+
+  // Notes
   const [notes, setNotes] = useState("");
 
   const [savedMessage, setSavedMessage] = useState("");
 
+  // Auth
   useEffect(() => {
     const isAuthed = localStorage.getItem("bmsa_logged_in") === "true";
     const storedEmail = localStorage.getItem("bmsa_user_email") || "";
+
     setAuthorized(isAuthed);
     setEmail(storedEmail);
+
   }, []);
 
+  // Load Airtable profile
   useEffect(() => {
+
     if (!email) return;
 
     fetch(
@@ -37,20 +58,40 @@ export default function Profile() {
         },
       }
     )
-      .then(res => res.json())
-      .then(data => {
-        if (data.records?.length) {
-          const r = data.records[0];
+    .then(res => res.json())
+    .then(data => {
 
-          setRecordId(r.id);
-          setTrainingGoal(r.fields.training_goal || "");
-          setExperienceLevel(r.fields.experience_level || "");
-          setNotes(r.fields.notes || "");
-        }
-      });
+      if (data.records?.length) {
+
+        const r = data.records[0];
+        const f = r.fields;
+
+        setRecordId(r.id);
+
+        setExperienceLevel(f.experience_level || "");
+        setEnhancedStatus(f.enhanced_status || "");
+        setTrainingGoal(f.training_goal || "");
+
+        setWeightValue(f.weight_value?.toString() || "");
+        setWeightUnit(f.weight_unit || "lbs");
+
+        setHeightValue(f.height_value?.toString() || "");
+        setHeightUnit(f.height_unit || "in");
+
+        setYearsTraining(f.years_training || "");
+        setCompetitionPrep(f.competition_prep || "");
+
+        setNotes(f.notes || "");
+
+      }
+
+    });
+
   }, [email]);
 
+  // Save
   const saveProfile = async () => {
+
     if (!recordId) return;
 
     await fetch(
@@ -63,9 +104,22 @@ export default function Profile() {
         },
         body: JSON.stringify({
           fields: {
-            training_goal: trainingGoal,
+
             experience_level: experienceLevel,
+            enhanced_status: enhancedStatus,
+            training_goal: trainingGoal,
+
+            weight_value: weightValue ? Number(weightValue) : null,
+            weight_unit: weightUnit,
+
+            height_value: heightValue ? Number(heightValue) : null,
+            height_unit: heightUnit,
+
+            years_training: yearsTraining,
+            competition_prep: competitionPrep,
+
             notes: notes,
+
           },
         }),
       }
@@ -73,32 +127,24 @@ export default function Profile() {
 
     setSavedMessage("Profile saved successfully ✓");
 
-    setTimeout(() => {
-      setSavedMessage("");
-    }, 3000);
+    setTimeout(() => setSavedMessage(""), 3000);
+
   };
 
-  if (authorized === false) {
-    return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        Members only
-      </main>
-    );
-  }
+  if (authorized === false)
+    return <main className="min-h-screen bg-black text-white flex items-center justify-center">Members only</main>;
 
-  if (authorized === null) {
-    return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        Loading…
-      </main>
-    );
-  }
+  if (authorized === null)
+    return <main className="min-h-screen bg-black text-white flex items-center justify-center">Loading…</main>;
 
   return (
+
     <main className="min-h-screen bg-black text-white">
+
       <section className="max-w-5xl mx-auto px-4 py-10">
 
         <div className="flex justify-between items-center mb-6">
+
           <h1 className="text-4xl font-bold">
             Your <span className="text-emerald-400">Profile</span>
           </h1>
@@ -106,82 +152,151 @@ export default function Profile() {
           <a href="/subscription-ai" className="text-emerald-400">
             AI Advisor
           </a>
+
         </div>
 
         <p className="mb-8 text-slate-300">Email: {email}</p>
 
-        {/* EXPERIENCE */}
-        <div className="mb-6">
-          <label className="block mb-2">Experience Level</label>
+        {/* Experience */}
+        <div className="mb-4">
 
-          <select
-            className="w-full bg-slate-900 p-3 rounded"
+          <label>Experience Level</label>
+
+          <select className="w-full bg-slate-900 p-3 rounded"
             value={experienceLevel}
-            onChange={(e) => setExperienceLevel(e.target.value)}
+            onChange={e => setExperienceLevel(e.target.value)}
           >
-            <option value="">Select one</option>
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
-            <option value="Enhanced">Enhanced</option>
+            <option value="">Select</option>
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+            <option>Enhanced</option>
           </select>
+
         </div>
 
-        {/* GOAL */}
-        <div className="mb-6">
-          <label className="block mb-2">Training Goal</label>
+        {/* Enhanced Status */}
+        <div className="mb-4">
+
+          <label>Enhanced Status</label>
+
+          <select className="w-full bg-slate-900 p-3 rounded"
+            value={enhancedStatus}
+            onChange={e => setEnhancedStatus(e.target.value)}
+          >
+            <option value="">Select</option>
+            <option>Natural</option>
+            <option>Enhanced</option>
+            <option>Prefer not to say</option>
+          </select>
+
+        </div>
+
+        {/* Weight */}
+        <div className="mb-4 flex gap-2">
+
+          <input
+            type="number"
+            placeholder="Weight"
+            className="w-full bg-slate-900 p-3 rounded"
+            value={weightValue}
+            onChange={e => setWeightValue(e.target.value)}
+          />
 
           <select
-            className="w-full bg-slate-900 p-3 rounded"
-            value={trainingGoal}
-            onChange={(e) => setTrainingGoal(e.target.value)}
+            className="bg-slate-900 p-3 rounded"
+            value={weightUnit}
+            onChange={e => setWeightUnit(e.target.value)}
           >
-            <option value="">Select one</option>
-            <option value="Bulk">Bulk</option>
-            <option value="Cut">Cut</option>
-            <option value="Recomp">Recomp</option>
-            <option value="Maintain">Maintain</option>
+            <option>lbs</option>
+            <option>kg</option>
           </select>
+
         </div>
 
-        {/* NOTES */}
-        <div className="mb-6">
-          <label className="block mb-2">Notes</label>
+        {/* Height */}
+        <div className="mb-4 flex gap-2">
+
+          <input
+            type="number"
+            placeholder="Height"
+            className="w-full bg-slate-900 p-3 rounded"
+            value={heightValue}
+            onChange={e => setHeightValue(e.target.value)}
+          />
+
+          <select
+            className="bg-slate-900 p-3 rounded"
+            value={heightUnit}
+            onChange={e => setHeightUnit(e.target.value)}
+          >
+            <option>in</option>
+            <option>cm</option>
+          </select>
+
+        </div>
+
+        {/* Training Years */}
+        <div className="mb-4">
+
+          <label>Years Training</label>
+
+          <select className="w-full bg-slate-900 p-3 rounded"
+            value={yearsTraining}
+            onChange={e => setYearsTraining(e.target.value)}
+          >
+            <option value="">Select</option>
+            <option>&lt;1 year</option>
+            <option>1–2 years</option>
+            <option>3–5 years</option>
+            <option>5+ years</option>
+          </select>
+
+        </div>
+
+        {/* Competition Prep */}
+        <div className="mb-4">
+
+          <label>Competition Prep</label>
+
+          <select className="w-full bg-slate-900 p-3 rounded"
+            value={competitionPrep}
+            onChange={e => setCompetitionPrep(e.target.value)}
+          >
+            <option value="">Select</option>
+            <option>Yes</option>
+            <option>No</option>
+          </select>
+
+        </div>
+
+        {/* Notes */}
+        <div className="mb-4">
 
           <textarea
             className="w-full bg-slate-900 p-3 rounded"
-            rows={5}
+            rows={4}
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={e => setNotes(e.target.value)}
           />
+
         </div>
 
-        {/* SAVE BUTTON */}
         <button
           onClick={saveProfile}
-          className="bg-emerald-500 text-black px-6 py-3 rounded font-semibold"
+          className="bg-emerald-500 text-black px-6 py-3 rounded"
         >
           Save Profile
         </button>
 
-        {savedMessage && (
-          <p className="mt-4 text-emerald-400">{savedMessage}</p>
-        )}
-
-        {/* SAVED PROFILE DISPLAY */}
-        <div className="mt-10 border-t border-slate-700 pt-6">
-          <h2 className="text-2xl mb-4 text-emerald-400">
-            Your Saved Profile
-          </h2>
-
-          <p>Experience Level: {experienceLevel || "Not set"}</p>
-          <p>Training Goal: {trainingGoal || "Not set"}</p>
-          <p>Notes: {notes || "None"}</p>
-        </div>
+        {savedMessage && <p className="mt-4 text-emerald-400">{savedMessage}</p>}
 
         <DisclaimerFooter />
 
       </section>
+
     </main>
+
   );
+
 }
