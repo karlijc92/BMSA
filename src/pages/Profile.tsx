@@ -7,25 +7,23 @@ const TABLE_NAME = "UserProfile";
 
 export default function Profile() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
-  const [email, setEmail] = useState<string>("");
+  const [email, setEmail] = useState("");
 
   const [recordId, setRecordId] = useState<string | null>(null);
 
-  // REAL profile fields (persistent)
   const [trainingGoal, setTrainingGoal] = useState("");
   const [experienceLevel, setExperienceLevel] = useState("");
   const [notes, setNotes] = useState("");
 
-  // Auth check
+  const [savedMessage, setSavedMessage] = useState("");
+
   useEffect(() => {
     const isAuthed = localStorage.getItem("bmsa_logged_in") === "true";
     const storedEmail = localStorage.getItem("bmsa_user_email") || "";
-
     setAuthorized(isAuthed);
     setEmail(storedEmail);
   }, []);
 
-  // Load profile from Airtable
   useEffect(() => {
     if (!email) return;
 
@@ -39,41 +37,23 @@ export default function Profile() {
         },
       }
     )
-      .then((res) => res.json())
-      .then((data) => {
+      .then(res => res.json())
+      .then(data => {
         if (data.records?.length) {
           const r = data.records[0];
 
           setRecordId(r.id);
-
           setTrainingGoal(r.fields.training_goal || "");
           setExperienceLevel(r.fields.experience_level || "");
           setNotes(r.fields.notes || "");
-        } else {
-          // Create record if missing
-          fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${TABLE_NAME}`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              fields: { email },
-            }),
-          })
-            .then((res) => res.json())
-            .then((r) => {
-              setRecordId(r.id);
-            });
         }
       });
   }, [email]);
 
-  // Save helper
-  const saveField = (fields: Record<string, any>) => {
+  const saveProfile = async () => {
     if (!recordId) return;
 
-    fetch(
+    await fetch(
       `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${TABLE_NAME}/${recordId}`,
       {
         method: "PATCH",
@@ -81,9 +61,21 @@ export default function Profile() {
           Authorization: `Bearer ${AIRTABLE_API_KEY}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ fields }),
+        body: JSON.stringify({
+          fields: {
+            training_goal: trainingGoal,
+            experience_level: experienceLevel,
+            notes: notes,
+          },
+        }),
       }
     );
+
+    setSavedMessage("Profile saved successfully ✓");
+
+    setTimeout(() => {
+      setSavedMessage("");
+    }, 3000);
   };
 
   if (authorized === false) {
@@ -106,13 +98,6 @@ export default function Profile() {
     <main className="min-h-screen bg-black text-white">
       <section className="max-w-5xl mx-auto px-4 py-10">
 
-        <button
-          onClick={() => window.history.back()}
-          className="text-emerald-400 mb-6"
-        >
-          ← Back
-        </button>
-
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-4xl font-bold">
             Your <span className="text-emerald-400">Profile</span>
@@ -123,24 +108,16 @@ export default function Profile() {
           </a>
         </div>
 
-        <p className="text-slate-300 mb-8">
-          Email: {email}
-        </p>
+        <p className="mb-8 text-slate-300">Email: {email}</p>
 
-        {/* EXPERIENCE LEVEL (REAL, SAVED, LOADED) */}
+        {/* EXPERIENCE */}
         <div className="mb-6">
-          <label className="block mb-2 text-sm text-slate-300">
-            Experience Level
-          </label>
+          <label className="block mb-2">Experience Level</label>
 
           <select
-            className="w-full bg-slate-900 border border-slate-700 p-3 rounded"
+            className="w-full bg-slate-900 p-3 rounded"
             value={experienceLevel}
-            onChange={(e) => {
-              const value = e.target.value;
-              setExperienceLevel(value);
-              saveField({ experience_level: value });
-            }}
+            onChange={(e) => setExperienceLevel(e.target.value)}
           >
             <option value="">Select one</option>
             <option value="Beginner">Beginner</option>
@@ -150,20 +127,14 @@ export default function Profile() {
           </select>
         </div>
 
-        {/* TRAINING GOAL (REAL, SAVED, LOADED) */}
+        {/* GOAL */}
         <div className="mb-6">
-          <label className="block mb-2 text-sm text-slate-300">
-            Training Goal
-          </label>
+          <label className="block mb-2">Training Goal</label>
 
           <select
-            className="w-full bg-slate-900 border border-slate-700 p-3 rounded"
+            className="w-full bg-slate-900 p-3 rounded"
             value={trainingGoal}
-            onChange={(e) => {
-              const value = e.target.value;
-              setTrainingGoal(value);
-              saveField({ training_goal: value });
-            }}
+            onChange={(e) => setTrainingGoal(e.target.value)}
           >
             <option value="">Select one</option>
             <option value="Bulk">Bulk</option>
@@ -173,48 +144,40 @@ export default function Profile() {
           </select>
         </div>
 
-        {/* NOTES (REAL, SAVED, LOADED) */}
-        <div className="mb-8">
-          <label className="block mb-2 text-sm text-slate-300">
-            Notes
-          </label>
+        {/* NOTES */}
+        <div className="mb-6">
+          <label className="block mb-2">Notes</label>
 
           <textarea
-            className="w-full bg-slate-900 border border-slate-700 p-3 rounded"
-            rows={6}
+            className="w-full bg-slate-900 p-3 rounded"
+            rows={5}
             value={notes}
-            onChange={(e) => {
-              const value = e.target.value;
-              setNotes(value);
-              saveField({ notes: value });
-            }}
-            placeholder="Saved to your profile automatically."
+            onChange={(e) => setNotes(e.target.value)}
           />
         </div>
 
-        {/* BILLING */}
-        <p className="mb-6">
-          <a
-            href="https://billing.stripe.com/p/login/bJe5kEgoZ64qc109nVeME00"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-emerald-400 underline"
-          >
-            Manage subscription
-          </a>
-        </p>
-
-        {/* LOGOUT */}
+        {/* SAVE BUTTON */}
         <button
-          onClick={() => {
-            localStorage.removeItem("bmsa_logged_in");
-            localStorage.removeItem("bmsa_user_email");
-            window.location.href = "/";
-          }}
-          className="text-sm text-red-400"
+          onClick={saveProfile}
+          className="bg-emerald-500 text-black px-6 py-3 rounded font-semibold"
         >
-          Log out
+          Save Profile
         </button>
+
+        {savedMessage && (
+          <p className="mt-4 text-emerald-400">{savedMessage}</p>
+        )}
+
+        {/* SAVED PROFILE DISPLAY */}
+        <div className="mt-10 border-t border-slate-700 pt-6">
+          <h2 className="text-2xl mb-4 text-emerald-400">
+            Your Saved Profile
+          </h2>
+
+          <p>Experience Level: {experienceLevel || "Not set"}</p>
+          <p>Training Goal: {trainingGoal || "Not set"}</p>
+          <p>Notes: {notes || "None"}</p>
+        </div>
 
         <DisclaimerFooter />
 
