@@ -1,241 +1,107 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import DisclaimerFooter from "@/components/DisclaimerFooter";
 
-/**
- * Supports BOTH env var styles:
- * - VITE_AIRTABLE_BASE_ID / VITE_AIRTABLE_API_KEY (recommended for Vite)
- * - AIRTABLE_BASE_ID / AIRTABLE_API_KEY (your current code)
- */
-const AIRTABLE_BASE_ID =
-  (import.meta as any).env.VITE_AIRTABLE_BASE_ID ||
-  (import.meta as any).env.AIRTABLE_BASE_ID;
+const STORAGE_KEY_PREFIX = "bmsa_profile_";
 
-const AIRTABLE_API_KEY =
-  (import.meta as any).env.VITE_AIRTABLE_API_KEY ||
-  (import.meta as any).env.AIRTABLE_API_KEY;
+type ProfileData = {
+  experience_level: string;
+  enhanced_status: string;
+  training_goal: string;
+  weight_value: string;
+  weight_unit: string;
+  height_value: string;
+  height_unit: string;
+  years_training: string;
+  competition_prep: string;
+  notes: string;
+};
 
-const TABLE_NAME = "UserProfile";
-
-type AirtableRecord = {
-  id: string;
-  fields: Record<string, any>;
+const emptyProfile: ProfileData = {
+  experience_level: "",
+  enhanced_status: "",
+  training_goal: "",
+  weight_value: "",
+  weight_unit: "lbs",
+  height_value: "",
+  height_unit: "in",
+  years_training: "",
+  competition_prep: "",
+  notes: "",
 };
 
 export default function Profile() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [email, setEmail] = useState("");
+  const [profile, setProfile] = useState<ProfileData>(emptyProfile);
+  const [draft, setDraft] = useState<ProfileData>(emptyProfile);
+  const [editing, setEditing] = useState(false);
+  const [savedMsg, setSavedMsg] = useState("");
 
-  const [recordId, setRecordId] = useState<string | null>(null);
-
-  // saved data (truth from Airtable)
-  const [saved, setSaved] = useState({
-    experience_level: "",
-    training_goal: "",
-    notes: "",
-  });
-
-  // draft data (what user is editing)
-  const [draft, setDraft] = useState({
-    experience_level: "",
-    training_goal: "",
-    notes: "",
-  });
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [status, setStatus] = useState<
-    "idle" | "loading" | "saving" | "saved" | "error"
-  >("idle");
-  const [errorMsg, setErrorMsg] = useState<string>("");
-
-  const canUseAirtable = useMemo(() => {
-    return Boolean(AIRTABLE_BASE_ID && AIRTABLE_API_KEY);
-  }, []);
-
-  // Auth
+  // Load auth + profile
   useEffect(() => {
     const isAuthed = localStorage.getItem("bmsa_logged_in") === "true";
     const storedEmail = localStorage.getItem("bmsa_user_email") || "";
 
     setAuthorized(isAuthed);
     setEmail(storedEmail);
-  }, []);
 
-  // Airtable helpers
-  const airtableHeaders = useMemo(() => {
-    return {
-      Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-      "Content-Type": "application/json",
-    };
-  }, []);
-
-  const loadOrCreateRecord = async (userEmail: string) => {
-    if (!canUseAirtable) {
-      throw new Error(
-        "Airtable is not configured. Missing AIRTABLE base id or API key in Vercel env vars."
+    if (storedEmail) {
+      const stored = localStorage.getItem(
+        STORAGE_KEY_PREFIX + storedEmail
       );
-    }
 
-    // 1) Try to find existing record
-    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${TABLE_NAME}?filterByFormula=${encodeURIComponent(
-      `{email}='${userEmail}'`
-    )}`;
-
-    const res = await fetch(url, { headers: airtableHeaders });
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Airtable load failed: ${res.status} ${text}`);
-    }
-
-    const data = await res.json();
-
-    if (data.records?.length) {
-      return data.records[0] as AirtableRecord;
-    }
-
-    // 2) Create a record if missing (THIS WAS MISSING BEFORE)
-    const createRes = await fetch(
-      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${TABLE_NAME}`,
-      {
-        method: "POST",
-        headers: airtableHeaders,
-        body: JSON.stringify({ fields: { email: userEmail } }),
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setProfile(parsed);
+        setDraft(parsed);
       }
+    }
+  }, []);
+
+  // Save profile
+  const saveProfile = () => {
+    if (!email) return;
+
+    localStorage.setItem(
+      STORAGE_KEY_PREFIX + email,
+      JSON.stringify(draft)
     );
 
-    if (!createRes.ok) {
-      const text = await createRes.text();
-      throw new Error(`Airtable create failed: ${createRes.status} ${text}`);
-    }
+    setProfile(draft);
+    setEditing(false);
+    setSavedMsg("Profile saved successfully ✓");
 
-    const created = (await createRes.json()) as AirtableRecord;
-    return created;
+    setTimeout(() => setSavedMsg(""), 3000);
   };
-
-  const patchRecord = async (id: string, fields: Record<string, any>) => {
-    const res = await fetch(
-      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${TABLE_NAME}/${id}`,
-      {
-        method: "PATCH",
-        headers: airtableHeaders,
-        body: JSON.stringify({ fields }),
-      }
-    );
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Airtable save failed: ${res.status} ${text}`);
-    }
-
-    const updated = (await res.json()) as AirtableRecord;
-    return updated;
-  };
-
-  // Load profile (and guarantee record exists)
-  useEffect(() => {
-    let cancelled = false;
-
-    const run = async () => {
-      if (!email) return;
-      setStatus("loading");
-      setErrorMsg("");
-
-      try {
-        const record = await loadOrCreateRecord(email);
-        if (cancelled) return;
-
-        setRecordId(record.id);
-
-        const experience_level = record.fields.experience_level || "";
-        const training_goal = record.fields.training_goal || "";
-        const notes = record.fields.notes || "";
-
-        const next = { experience_level, training_goal, notes };
-
-        setSaved(next);
-        setDraft(next);
-
-        setStatus("idle");
-      } catch (e: any) {
-        if (cancelled) return;
-        setStatus("error");
-        setErrorMsg(e?.message || "Unknown error");
-      }
-    };
-
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, [email]);
 
   const startEdit = () => {
-    setDraft(saved); // reset draft from saved
-    setIsEditing(true);
-    setErrorMsg("");
+    setDraft(profile);
+    setEditing(true);
   };
 
   const cancelEdit = () => {
-    setDraft(saved);
-    setIsEditing(false);
-    setErrorMsg("");
+    setDraft(profile);
+    setEditing(false);
   };
 
-  const saveNow = async () => {
-    if (!recordId) {
-      setStatus("error");
-      setErrorMsg(
-        "Profile record is not ready yet (recordId missing). Refresh and try again."
-      );
-      return;
-    }
-
-    setStatus("saving");
-    setErrorMsg("");
-
-    try {
-      const updated = await patchRecord(recordId, {
-        experience_level: draft.experience_level || "",
-        training_goal: draft.training_goal || "",
-        notes: draft.notes || "",
-      });
-
-      const nextSaved = {
-        experience_level: updated.fields.experience_level || "",
-        training_goal: updated.fields.training_goal || "",
-        notes: updated.fields.notes || "",
-      };
-
-      setSaved(nextSaved);
-      setDraft(nextSaved);
-      setIsEditing(false);
-
-      setStatus("saved");
-      setTimeout(() => setStatus("idle"), 2500);
-    } catch (e: any) {
-      setStatus("error");
-      setErrorMsg(e?.message || "Unknown save error");
-    }
-  };
-
-  if (authorized === false) {
+  if (authorized === false)
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
         Members only
       </main>
     );
-  }
 
-  if (authorized === null) {
+  if (authorized === null)
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
         Loading…
       </main>
     );
-  }
 
   return (
     <main className="min-h-screen bg-black text-white">
       <section className="max-w-5xl mx-auto px-4 py-10">
+
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-4xl font-bold">
             Your <span className="text-emerald-400">Profile</span>
@@ -248,190 +114,215 @@ export default function Profile() {
 
         <p className="mb-6 text-slate-300">Email: {email}</p>
 
-        {/* STATUS / ERRORS (so you can SEE why it fails) */}
-        {!canUseAirtable && (
-          <div className="mb-6 p-4 rounded border border-red-700 bg-red-950/40">
-            <p className="text-red-300 font-semibold">
-              Airtable is NOT configured.
-            </p>
-            <p className="text-red-200 text-sm mt-1">
-              Missing env vars in Vercel. Add either:
-              <br />
-              <span className="font-mono">
-                VITE_AIRTABLE_BASE_ID + VITE_AIRTABLE_API_KEY
-              </span>
-              <br />
-              or
-              <br />
-              <span className="font-mono">AIRTABLE_BASE_ID + AIRTABLE_API_KEY</span>
-            </p>
-          </div>
-        )}
-
-        {status === "error" && (
-          <div className="mb-6 p-4 rounded border border-red-700 bg-red-950/40">
-            <p className="text-red-300 font-semibold">Save/Load Error</p>
-            <p className="text-red-200 text-sm mt-1">{errorMsg}</p>
-          </div>
-        )}
-
-        {/* VIEW MODE */}
-        {!isEditing && (
+        {!editing && (
           <div className="space-y-6">
-            <div className="p-5 rounded border border-slate-800 bg-slate-950/40">
-              <h2 className="text-xl font-semibold mb-4 text-emerald-400">
+
+            <div className="bg-slate-950 border border-slate-800 p-5 rounded">
+              <h2 className="text-xl text-emerald-400 mb-4">
                 Saved Profile
               </h2>
 
-              <div className="space-y-2 text-slate-200">
-                <p>
-                  <span className="text-slate-400">Experience Level:</span>{" "}
-                  {saved.experience_level || "Not set"}
-                </p>
-                <p>
-                  <span className="text-slate-400">Training Goal:</span>{" "}
-                  {saved.training_goal || "Not set"}
-                </p>
-                <p>
-                  <span className="text-slate-400">Notes:</span>{" "}
-                  {saved.notes ? saved.notes : "None"}
-                </p>
-              </div>
+              <p>Experience Level: {profile.experience_level || "Not set"}</p>
+              <p>Enhanced Status: {profile.enhanced_status || "Not set"}</p>
+              <p>Training Goal: {profile.training_goal || "Not set"}</p>
 
-              <div className="mt-4 flex gap-3 items-center">
-                <button
-                  onClick={startEdit}
-                  className="bg-emerald-500 text-black px-5 py-2 rounded font-semibold"
-                >
-                  Edit Profile
-                </button>
+              <p>
+                Weight:
+                {profile.weight_value
+                  ? ` ${profile.weight_value} ${profile.weight_unit}`
+                  : " Not set"}
+              </p>
 
-                {status === "saving" && (
-                  <span className="text-slate-300 text-sm">Saving…</span>
-                )}
-                {status === "saved" && (
-                  <span className="text-emerald-400 text-sm">
-                    Saved successfully ✓
-                  </span>
-                )}
-                {status === "loading" && (
-                  <span className="text-slate-300 text-sm">Loading…</span>
-                )}
-              </div>
+              <p>
+                Height:
+                {profile.height_value
+                  ? ` ${profile.height_value} ${profile.height_unit}`
+                  : " Not set"}
+              </p>
+
+              <p>Years Training: {profile.years_training || "Not set"}</p>
+
+              <p>Competition Prep: {profile.competition_prep || "Not set"}</p>
+
+              <p className="mt-3">
+                Notes: {profile.notes || "None"}
+              </p>
+
+              <button
+                onClick={startEdit}
+                className="mt-4 bg-emerald-500 text-black px-5 py-2 rounded font-semibold"
+              >
+                Edit Profile
+              </button>
+
+              {savedMsg && (
+                <p className="text-emerald-400 mt-3">{savedMsg}</p>
+              )}
             </div>
+
           </div>
         )}
 
-        {/* EDIT MODE */}
-        {isEditing && (
-          <div className="p-5 rounded border border-slate-800 bg-slate-950/40">
-            <h2 className="text-xl font-semibold mb-4 text-emerald-400">
-              Edit Profile
-            </h2>
+        {editing && (
+          <div className="bg-slate-950 border border-slate-800 p-5 rounded space-y-4">
 
-            {/* Experience */}
-            <div className="mb-4">
-              <label className="block mb-2 text-slate-300">
-                Experience Level
-              </label>
-              <select
-                className="w-full bg-slate-900 border border-slate-700 p-3 rounded"
-                value={draft.experience_level}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, experience_level: e.target.value }))
-                }
-              >
-                <option value="">Select one</option>
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
-                <option value="Enhanced">Enhanced</option>
-              </select>
-            </div>
+            <select
+              value={draft.experience_level}
+              onChange={e =>
+                setDraft({ ...draft, experience_level: e.target.value })
+              }
+              className="w-full bg-slate-900 p-3 rounded"
+            >
+              <option value="">Experience Level</option>
+              <option>Beginner</option>
+              <option>Intermediate</option>
+              <option>Advanced</option>
+              <option>Enhanced</option>
+            </select>
 
-            {/* Training goal */}
-            <div className="mb-4">
-              <label className="block mb-2 text-slate-300">Training Goal</label>
-              <select
-                className="w-full bg-slate-900 border border-slate-700 p-3 rounded"
-                value={draft.training_goal}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, training_goal: e.target.value }))
-                }
-              >
-                <option value="">Select one</option>
-                <option value="Bulk">Bulk</option>
-                <option value="Cut">Cut</option>
-                <option value="Recomp">Recomp</option>
-                <option value="Maintain">Maintain</option>
-              </select>
-            </div>
+            <select
+              value={draft.enhanced_status}
+              onChange={e =>
+                setDraft({ ...draft, enhanced_status: e.target.value })
+              }
+              className="w-full bg-slate-900 p-3 rounded"
+            >
+              <option value="">Enhanced Status</option>
+              <option>Natural</option>
+              <option>Enhanced</option>
+              <option>Prefer not to say</option>
+            </select>
 
-            {/* Notes */}
-            <div className="mb-5">
-              <label className="block mb-2 text-slate-300">Notes</label>
-              <textarea
-                className="w-full bg-slate-900 border border-slate-700 p-3 rounded"
-                rows={6}
-                value={draft.notes}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, notes: e.target.value }))
+            <select
+              value={draft.training_goal}
+              onChange={e =>
+                setDraft({ ...draft, training_goal: e.target.value })
+              }
+              className="w-full bg-slate-900 p-3 rounded"
+            >
+              <option value="">Training Goal</option>
+              <option>Bulk</option>
+              <option>Cut</option>
+              <option>Recomp</option>
+              <option>Maintain</option>
+            </select>
+
+            <div className="flex gap-2">
+              <input
+                type="number"
+                placeholder="Weight"
+                value={draft.weight_value}
+                onChange={e =>
+                  setDraft({ ...draft, weight_value: e.target.value })
                 }
-                placeholder="Write notes you want saved in your profile."
+                className="w-full bg-slate-900 p-3 rounded"
               />
-              <p className="text-xs text-slate-400 mt-2">
-                Tip: Your old notes don’t disappear unless you overwrite them.
-                If you want “note history,” that’s a separate feature we can add next.
-              </p>
+
+              <select
+                value={draft.weight_unit}
+                onChange={e =>
+                  setDraft({ ...draft, weight_unit: e.target.value })
+                }
+                className="bg-slate-900 p-3 rounded"
+              >
+                <option>lbs</option>
+                <option>kg</option>
+              </select>
             </div>
+
+            <div className="flex gap-2">
+              <input
+                type="number"
+                placeholder="Height"
+                value={draft.height_value}
+                onChange={e =>
+                  setDraft({ ...draft, height_value: e.target.value })
+                }
+                className="w-full bg-slate-900 p-3 rounded"
+              />
+
+              <select
+                value={draft.height_unit}
+                onChange={e =>
+                  setDraft({ ...draft, height_unit: e.target.value })
+                }
+                className="bg-slate-900 p-3 rounded"
+              >
+                <option>in</option>
+                <option>cm</option>
+              </select>
+            </div>
+
+            <select
+              value={draft.years_training}
+              onChange={e =>
+                setDraft({ ...draft, years_training: e.target.value })
+              }
+              className="w-full bg-slate-900 p-3 rounded"
+            >
+              <option value="">Years Training</option>
+              <option>&lt;1 year</option>
+              <option>1–2 years</option>
+              <option>3–5 years</option>
+              <option>5+ years</option>
+            </select>
+
+            <select
+              value={draft.competition_prep}
+              onChange={e =>
+                setDraft({ ...draft, competition_prep: e.target.value })
+              }
+              className="w-full bg-slate-900 p-3 rounded"
+            >
+              <option value="">Competition Prep</option>
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+
+            <textarea
+              value={draft.notes}
+              onChange={e =>
+                setDraft({ ...draft, notes: e.target.value })
+              }
+              className="w-full bg-slate-900 p-3 rounded"
+              rows={5}
+              placeholder="Notes"
+            />
 
             <div className="flex gap-3">
               <button
-                onClick={saveNow}
-                className="bg-emerald-500 text-black px-5 py-2 rounded font-semibold"
-                disabled={status === "saving"}
+                onClick={saveProfile}
+                className="bg-emerald-500 text-black px-5 py-2 rounded"
               >
-                {status === "saving" ? "Saving…" : "Save"}
+                Save
               </button>
 
               <button
                 onClick={cancelEdit}
-                className="bg-slate-800 text-white px-5 py-2 rounded"
+                className="bg-slate-800 px-5 py-2 rounded"
               >
                 Cancel
               </button>
             </div>
+
           </div>
         )}
 
-        {/* Billing + Logout (kept) */}
         <div className="mt-8">
-          <p className="mb-4">
-            <a
-              href="https://billing.stripe.com/p/login/bJe5kEgoZ64qc109nVeME00"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald-400 underline"
-            >
-              Manage subscription
-            </a>
-          </p>
-
-          <button
-            onClick={() => {
-              localStorage.removeItem("bmsa_logged_in");
-              localStorage.removeItem("bmsa_user_email");
-              window.location.href = "/";
-            }}
-            className="text-sm text-red-400"
+          <a
+            href="https://billing.stripe.com/p/login/bJe5kEgoZ64qc109nVeME00"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald-400 underline"
           >
-            Log out
-          </button>
+            Manage subscription
+          </a>
         </div>
 
         <div className="mt-10">
           <DisclaimerFooter />
         </div>
+
       </section>
     </main>
   );
