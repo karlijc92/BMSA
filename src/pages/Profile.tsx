@@ -10,13 +10,17 @@ export default function Profile() {
   const [email, setEmail] = useState<string>("");
 
   const [recordId, setRecordId] = useState<string | null>(null);
-  const [notes, setNotes] = useState("");
-  const [trainingGoal, setTrainingGoal] = useState("");
 
-  // Auth
+  // REAL profile fields (persistent)
+  const [trainingGoal, setTrainingGoal] = useState("");
+  const [experienceLevel, setExperienceLevel] = useState("");
+  const [notes, setNotes] = useState("");
+
+  // Auth check
   useEffect(() => {
     const isAuthed = localStorage.getItem("bmsa_logged_in") === "true";
     const storedEmail = localStorage.getItem("bmsa_user_email") || "";
+
     setAuthorized(isAuthed);
     setEmail(storedEmail);
   }, []);
@@ -39,11 +43,14 @@ export default function Profile() {
       .then((data) => {
         if (data.records?.length) {
           const r = data.records[0];
+
           setRecordId(r.id);
-          setNotes(r.fields.notes || "");
+
           setTrainingGoal(r.fields.training_goal || "");
+          setExperienceLevel(r.fields.experience_level || "");
+          setNotes(r.fields.notes || "");
         } else {
-          // create record if missing
+          // Create record if missing
           fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${TABLE_NAME}`, {
             method: "POST",
             headers: {
@@ -55,7 +62,9 @@ export default function Profile() {
             }),
           })
             .then((res) => res.json())
-            .then((r) => setRecordId(r.id));
+            .then((r) => {
+              setRecordId(r.id);
+            });
         }
       });
   }, [email]);
@@ -63,6 +72,7 @@ export default function Profile() {
   // Save helper
   const saveField = (fields: Record<string, any>) => {
     if (!recordId) return;
+
     fetch(
       `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${TABLE_NAME}/${recordId}`,
       {
@@ -85,12 +95,17 @@ export default function Profile() {
   }
 
   if (authorized === null) {
-    return <main className="min-h-screen bg-black text-white">Loading…</main>;
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        Loading…
+      </main>
+    );
   }
 
   return (
     <main className="min-h-screen bg-black text-white">
       <section className="max-w-5xl mx-auto px-4 py-10">
+
         <button
           onClick={() => window.history.back()}
           className="text-emerald-400 mb-6"
@@ -103,26 +118,51 @@ export default function Profile() {
             Your <span className="text-emerald-400">Profile</span>
           </h1>
 
-          {/* RESTORED */}
           <a href="/subscription-ai" className="text-emerald-400">
             AI Advisor
           </a>
         </div>
 
-        <p className="text-slate-300 mb-6">Email: {email}</p>
+        <p className="text-slate-300 mb-8">
+          Email: {email}
+        </p>
 
-        {/* TRAINING GOAL (controlled, saved) */}
+        {/* EXPERIENCE LEVEL (REAL, SAVED, LOADED) */}
         <div className="mb-6">
           <label className="block mb-2 text-sm text-slate-300">
-            Training goal
+            Experience Level
           </label>
+
+          <select
+            className="w-full bg-slate-900 border border-slate-700 p-3 rounded"
+            value={experienceLevel}
+            onChange={(e) => {
+              const value = e.target.value;
+              setExperienceLevel(value);
+              saveField({ experience_level: value });
+            }}
+          >
+            <option value="">Select one</option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+            <option value="Enhanced">Enhanced</option>
+          </select>
+        </div>
+
+        {/* TRAINING GOAL (REAL, SAVED, LOADED) */}
+        <div className="mb-6">
+          <label className="block mb-2 text-sm text-slate-300">
+            Training Goal
+          </label>
+
           <select
             className="w-full bg-slate-900 border border-slate-700 p-3 rounded"
             value={trainingGoal}
             onChange={(e) => {
-              const v = e.target.value;
-              setTrainingGoal(v);
-              saveField({ training_goal: v });
+              const value = e.target.value;
+              setTrainingGoal(value);
+              saveField({ training_goal: value });
             }}
           >
             <option value="">Select one</option>
@@ -133,22 +173,26 @@ export default function Profile() {
           </select>
         </div>
 
-        {/* NOTES (explicit save) */}
+        {/* NOTES (REAL, SAVED, LOADED) */}
         <div className="mb-8">
-          <h2 className="text-xl mb-2">Notes</h2>
+          <label className="block mb-2 text-sm text-slate-300">
+            Notes
+          </label>
+
           <textarea
             className="w-full bg-slate-900 border border-slate-700 p-3 rounded"
-            rows={8}
+            rows={6}
             value={notes}
             onChange={(e) => {
-              const v = e.target.value;
-              setNotes(v);
-              saveField({ notes: v });
+              const value = e.target.value;
+              setNotes(value);
+              saveField({ notes: value });
             }}
-            placeholder="Saved to your profile."
+            placeholder="Saved to your profile automatically."
           />
         </div>
 
+        {/* BILLING */}
         <p className="mb-6">
           <a
             href="https://billing.stripe.com/p/login/bJe5kEgoZ64qc109nVeME00"
@@ -160,6 +204,7 @@ export default function Profile() {
           </a>
         </p>
 
+        {/* LOGOUT */}
         <button
           onClick={() => {
             localStorage.removeItem("bmsa_logged_in");
@@ -172,6 +217,7 @@ export default function Profile() {
         </button>
 
         <DisclaimerFooter />
+
       </section>
     </main>
   );
