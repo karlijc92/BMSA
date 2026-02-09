@@ -47,16 +47,16 @@ export default function SignUpForm({ mode = "signup" }: Props) {
       </p>
 
       {!isLogin && (
-        <div className="flex gap-3 mb-4">
+        <div className="grid grid-cols-2 gap-3 mb-4">
           <input
             placeholder="First Name"
-            className="flex-1 rounded-md bg-black border border-gray-700 px-3 py-2 text-white"
+            className="w-full rounded-md bg-black border border-gray-700 px-3 py-2 text-white"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
           />
           <input
             placeholder="Last Name"
-            className="flex-1 rounded-md bg-black border border-gray-700 px-3 py-2 text-white"
+            className="w-full rounded-md bg-black border border-gray-700 px-3 py-2 text-white"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
           />
