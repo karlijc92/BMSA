@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabaseClient";
 
 type Props = {
   mode?: "signup" | "login";
@@ -14,8 +15,9 @@ export default function SignUpForm({ mode = "signup" }: Props) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -24,11 +26,43 @@ export default function SignUpForm({ mode = "signup" }: Props) {
       return;
     }
 
-    // TEMP AUTH (local only — intentional)
-    localStorage.setItem("bmsa_user_email", email);
+    setIsLoading(true);
 
-    // After login/signup → go to subscribe
-    navigate("/subscribe");
+    if (isLogin) {
+      const { data, error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (loginError) {
+        setError(loginError.message);
+        setIsLoading(false);
+        return;
+      }
+
+      navigate("/profile");
+    } else {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+          },
+        },
+      });
+
+      if (signUpError) {
+        setError(signUpError.message);
+        setIsLoading(false);
+        return;
+      }
+
+      navigate("/subscribe");
+    }
+
+    setIsLoading(false);
   };
 
   return (
@@ -39,7 +73,6 @@ export default function SignUpForm({ mode = "signup" }: Props) {
       <h1 className="text-2xl font-bold text-white mb-2 text-center">
         {isLogin ? "Member Login" : "Join BMSA"}
       </h1>
-
       <p className="text-gray-400 text-sm mb-6 text-center">
         {isLogin
           ? "Log in to access your account"
@@ -70,7 +103,6 @@ export default function SignUpForm({ mode = "signup" }: Props) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
-
       <input
         placeholder="Password"
         type="password"
@@ -85,9 +117,10 @@ export default function SignUpForm({ mode = "signup" }: Props) {
 
       <button
         type="submit"
-        className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold py-2 rounded-md transition"
+        disabled={isLoading}
+        className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold py-2 rounded-md transition disabled:opacity-50"
       >
-        {isLogin ? "Log In" : "Create Account"}
+        {isLoading ? "Please wait..." : isLogin ? "Log In" : "Create Account"}
       </button>
     </form>
   );
