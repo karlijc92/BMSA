@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import DisclaimerFooter from "@/components/DisclaimerFooter";
-
-const STORAGE_KEY_PREFIX = "bmsa_profile_";
+import { supabase } from "@/lib/supabaseClient";
 
 type StackItem = {
   name: string;
@@ -15,7 +14,6 @@ type LiftItem = {
 };
 
 type ProfileData = {
-  // Body & Training Goals
   experience_level: string;
   enhanced_status: string;
   training_goal: string;
@@ -29,24 +27,20 @@ type ProfileData = {
   years_training: string;
   competition_prep: string;
 
-  // Nutrition & Calories
   daily_calorie_target: string;
   protein_target_g: string;
   carb_target_g: string;
   fat_target_g: string;
   diet_style: string;
 
-  // Current Supplement Stack
   current_stack: StackItem[];
   supplement_budget: string;
 
-  // Gym Performance
   training_split: string;
   days_per_week: string;
   cardio_frequency: string;
   key_lifts: LiftItem[];
 
-  // Health & Safety
   allergies_or_conditions: string;
   current_medications: string;
   sleep_hours_avg: string;
@@ -96,38 +90,50 @@ export default function Profile() {
   const [draft, setDraft] = useState<ProfileData>(emptyProfile);
   const [editing, setEditing] = useState(false);
   const [savedMsg, setSavedMsg] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // Load auth + profile
   useEffect(() => {
-    const isAuthed = localStorage.getItem("bmsa_logged_in") === "true";
-    const storedEmail = localStorage.getItem("bmsa_user_email") || "";
+    const loadProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
 
-    setAuthorized(isAuthed);
-    setEmail(storedEmail);
-
-    if (storedEmail) {
-      const stored = localStorage.getItem(
-        STORAGE_KEY_PREFIX + storedEmail
-      );
-
-      if (stored) {
-        // Merge stored data over defaults so older saved profiles
-        // (without the new fields) don't break on load.
-        const parsed = { ...emptyProfile, ...JSON.parse(stored) };
-        setProfile(parsed);
-        setDraft(parsed);
+      if (!session) {
+        setAuthorized(false);
+        setLoading(false);
+        return;
       }
-    }
+
+      setAuthorized(true);
+      setEmail(session.user.email || "");
+
+      const { data, error } = await supabase
+        .from("bmsa_profiles")
+        .select("*")
+        .eq("email", session.user.email)
+        .maybeSingle();
+
+      if (data) {
+        const merged = { ...emptyProfile, ...data };
+        setProfile(merged);
+        setDraft(merged);
+      }
+
+      setLoading(false);
+    };
+
+    loadProfile();
   }, []);
 
-  // Save profile
-  const saveProfile = () => {
+  const saveProfile = async () => {
     if (!email) return;
 
-    localStorage.setItem(
-      STORAGE_KEY_PREFIX + email,
-      JSON.stringify(draft)
-    );
+    const { error } = await supabase
+      .from("bmsa_profiles")
+      .upsert({ email, ...draft }, { onConflict: "email" });
+
+    if (error) {
+      setSavedMsg("Error saving profile");
+      return;
+    }
 
     setProfile(draft);
     setEditing(false);
@@ -146,7 +152,6 @@ export default function Profile() {
     setEditing(false);
   };
 
-  // Stack helpers
   const addStackItem = () => {
     setDraft({
       ...draft,
@@ -165,7 +170,6 @@ export default function Profile() {
     setDraft({ ...draft, current_stack: updated });
   };
 
-  // Key lift helpers
   const addLiftItem = () => {
     setDraft({
       ...draft,
@@ -184,17 +188,17 @@ export default function Profile() {
     setDraft({ ...draft, key_lifts: updated });
   };
 
+  if (loading)
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        Loading…
+      </main>
+    );
+
   if (authorized === false)
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
         Members only
-      </main>
-    );
-
-  if (authorized === null)
-    return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        Loading…
       </main>
     );
 
@@ -217,7 +221,6 @@ export default function Profile() {
         {!editing && (
           <div className="space-y-6">
 
-            {/* Body & Training Goals */}
             <div className="bg-slate-950 border border-slate-800 p-5 rounded">
               <h2 className="text-xl text-emerald-400 mb-4">
                 Body &amp; Training Goals
@@ -264,7 +267,6 @@ export default function Profile() {
               )}
             </div>
 
-            {/* Nutrition & Calories */}
             <div className="bg-slate-950 border border-slate-800 p-5 rounded">
               <h2 className="text-xl text-emerald-400 mb-4">
                 Nutrition &amp; Calories
@@ -277,7 +279,6 @@ export default function Profile() {
               <p>Fat Target: {profile.fat_target_g ? `${profile.fat_target_g} g` : "Not set"}</p>
             </div>
 
-            {/* Current Supplement Stack */}
             <div className="bg-slate-950 border border-slate-800 p-5 rounded">
               <h2 className="text-xl text-emerald-400 mb-4">
                 Current Supplement Stack
@@ -301,7 +302,6 @@ export default function Profile() {
               </p>
             </div>
 
-            {/* Gym Performance */}
             <div className="bg-slate-950 border border-slate-800 p-5 rounded">
               <h2 className="text-xl text-emerald-400 mb-4">
                 Gym Performance
@@ -326,7 +326,6 @@ export default function Profile() {
               )}
             </div>
 
-            {/* Health & Safety */}
             <div className="bg-slate-950 border border-slate-800 p-5 rounded">
               <h2 className="text-xl text-emerald-400 mb-4">
                 Health &amp; Safety
@@ -347,15 +346,12 @@ export default function Profile() {
         {editing && (
           <div className="space-y-6">
 
-            {/* Body & Training Goals */}
             <div className="bg-slate-950 border border-slate-800 p-5 rounded space-y-4">
               <h2 className="text-xl text-emerald-400">Body &amp; Training Goals</h2>
 
               <select
                 value={draft.experience_level}
-                onChange={e =>
-                  setDraft({ ...draft, experience_level: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, experience_level: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
               >
                 <option value="">Experience Level</option>
@@ -367,9 +363,7 @@ export default function Profile() {
 
               <select
                 value={draft.enhanced_status}
-                onChange={e =>
-                  setDraft({ ...draft, enhanced_status: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, enhanced_status: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
               >
                 <option value="">Enhanced Status</option>
@@ -380,9 +374,7 @@ export default function Profile() {
 
               <select
                 value={draft.training_goal}
-                onChange={e =>
-                  setDraft({ ...draft, training_goal: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, training_goal: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
               >
                 <option value="">Training Goal</option>
@@ -397,17 +389,12 @@ export default function Profile() {
                   type="number"
                   placeholder="Current Weight"
                   value={draft.weight_value}
-                  onChange={e =>
-                    setDraft({ ...draft, weight_value: e.target.value })
-                  }
+                  onChange={e => setDraft({ ...draft, weight_value: e.target.value })}
                   className="w-full bg-slate-900 p-3 rounded"
                 />
-
                 <select
                   value={draft.weight_unit}
-                  onChange={e =>
-                    setDraft({ ...draft, weight_unit: e.target.value })
-                  }
+                  onChange={e => setDraft({ ...draft, weight_unit: e.target.value })}
                   className="bg-slate-900 p-3 rounded"
                 >
                   <option>lbs</option>
@@ -420,17 +407,12 @@ export default function Profile() {
                   type="number"
                   placeholder="Target Weight"
                   value={draft.target_weight_value}
-                  onChange={e =>
-                    setDraft({ ...draft, target_weight_value: e.target.value })
-                  }
+                  onChange={e => setDraft({ ...draft, target_weight_value: e.target.value })}
                   className="w-full bg-slate-900 p-3 rounded"
                 />
-
                 <select
                   value={draft.target_weight_unit}
-                  onChange={e =>
-                    setDraft({ ...draft, target_weight_unit: e.target.value })
-                  }
+                  onChange={e => setDraft({ ...draft, target_weight_unit: e.target.value })}
                   className="bg-slate-900 p-3 rounded"
                 >
                   <option>lbs</option>
@@ -443,17 +425,12 @@ export default function Profile() {
                   type="number"
                   placeholder="Height"
                   value={draft.height_value}
-                  onChange={e =>
-                    setDraft({ ...draft, height_value: e.target.value })
-                  }
+                  onChange={e => setDraft({ ...draft, height_value: e.target.value })}
                   className="w-full bg-slate-900 p-3 rounded"
                 />
-
                 <select
                   value={draft.height_unit}
-                  onChange={e =>
-                    setDraft({ ...draft, height_unit: e.target.value })
-                  }
+                  onChange={e => setDraft({ ...draft, height_unit: e.target.value })}
                   className="bg-slate-900 p-3 rounded"
                 >
                   <option>in</option>
@@ -465,17 +442,13 @@ export default function Profile() {
                 type="number"
                 placeholder="Body Fat % (optional)"
                 value={draft.body_fat_percentage}
-                onChange={e =>
-                  setDraft({ ...draft, body_fat_percentage: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, body_fat_percentage: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
               />
 
               <select
                 value={draft.years_training}
-                onChange={e =>
-                  setDraft({ ...draft, years_training: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, years_training: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
               >
                 <option value="">Years Training</option>
@@ -487,9 +460,7 @@ export default function Profile() {
 
               <select
                 value={draft.competition_prep}
-                onChange={e =>
-                  setDraft({ ...draft, competition_prep: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, competition_prep: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
               >
                 <option value="">Competition Prep</option>
@@ -498,15 +469,12 @@ export default function Profile() {
               </select>
             </div>
 
-            {/* Nutrition & Calories */}
             <div className="bg-slate-950 border border-slate-800 p-5 rounded space-y-4">
               <h2 className="text-xl text-emerald-400">Nutrition &amp; Calories</h2>
 
               <select
                 value={draft.diet_style}
-                onChange={e =>
-                  setDraft({ ...draft, diet_style: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, diet_style: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
               >
                 <option value="">Diet Style</option>
@@ -522,9 +490,7 @@ export default function Profile() {
                 type="number"
                 placeholder="Daily Calorie Target (kcal)"
                 value={draft.daily_calorie_target}
-                onChange={e =>
-                  setDraft({ ...draft, daily_calorie_target: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, daily_calorie_target: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
               />
 
@@ -533,33 +499,26 @@ export default function Profile() {
                   type="number"
                   placeholder="Protein (g)"
                   value={draft.protein_target_g}
-                  onChange={e =>
-                    setDraft({ ...draft, protein_target_g: e.target.value })
-                  }
+                  onChange={e => setDraft({ ...draft, protein_target_g: e.target.value })}
                   className="w-full bg-slate-900 p-3 rounded"
                 />
                 <input
                   type="number"
                   placeholder="Carbs (g)"
                   value={draft.carb_target_g}
-                  onChange={e =>
-                    setDraft({ ...draft, carb_target_g: e.target.value })
-                  }
+                  onChange={e => setDraft({ ...draft, carb_target_g: e.target.value })}
                   className="w-full bg-slate-900 p-3 rounded"
                 />
                 <input
                   type="number"
                   placeholder="Fat (g)"
                   value={draft.fat_target_g}
-                  onChange={e =>
-                    setDraft({ ...draft, fat_target_g: e.target.value })
-                  }
+                  onChange={e => setDraft({ ...draft, fat_target_g: e.target.value })}
                   className="w-full bg-slate-900 p-3 rounded"
                 />
               </div>
             </div>
 
-            {/* Current Supplement Stack */}
             <div className="bg-slate-950 border border-slate-800 p-5 rounded space-y-4">
               <h2 className="text-xl text-emerald-400">Current Supplement Stack</h2>
 
@@ -606,22 +565,17 @@ export default function Profile() {
                 type="number"
                 placeholder="Monthly Supplement Budget ($)"
                 value={draft.supplement_budget}
-                onChange={e =>
-                  setDraft({ ...draft, supplement_budget: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, supplement_budget: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
               />
             </div>
 
-            {/* Gym Performance */}
             <div className="bg-slate-950 border border-slate-800 p-5 rounded space-y-4">
               <h2 className="text-xl text-emerald-400">Gym Performance</h2>
 
               <select
                 value={draft.training_split}
-                onChange={e =>
-                  setDraft({ ...draft, training_split: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, training_split: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
               >
                 <option value="">Training Split</option>
@@ -634,9 +588,7 @@ export default function Profile() {
 
               <select
                 value={draft.days_per_week}
-                onChange={e =>
-                  setDraft({ ...draft, days_per_week: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, days_per_week: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
               >
                 <option value="">Training Days Per Week</option>
@@ -648,9 +600,7 @@ export default function Profile() {
 
               <select
                 value={draft.cardio_frequency}
-                onChange={e =>
-                  setDraft({ ...draft, cardio_frequency: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, cardio_frequency: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
               >
                 <option value="">Cardio Frequency</option>
@@ -693,15 +643,12 @@ export default function Profile() {
               </button>
             </div>
 
-            {/* Health & Safety */}
             <div className="bg-slate-950 border border-slate-800 p-5 rounded space-y-4">
               <h2 className="text-xl text-emerald-400">Health &amp; Safety</h2>
 
               <textarea
                 value={draft.allergies_or_conditions}
-                onChange={e =>
-                  setDraft({ ...draft, allergies_or_conditions: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, allergies_or_conditions: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
                 rows={2}
                 placeholder="Allergies or health conditions (optional)"
@@ -709,9 +656,7 @@ export default function Profile() {
 
               <textarea
                 value={draft.current_medications}
-                onChange={e =>
-                  setDraft({ ...draft, current_medications: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, current_medications: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
                 rows={2}
                 placeholder="Current medications (optional)"
@@ -721,17 +666,13 @@ export default function Profile() {
                 type="number"
                 placeholder="Average Sleep (hours/night)"
                 value={draft.sleep_hours_avg}
-                onChange={e =>
-                  setDraft({ ...draft, sleep_hours_avg: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, sleep_hours_avg: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
               />
 
               <textarea
                 value={draft.notes}
-                onChange={e =>
-                  setDraft({ ...draft, notes: e.target.value })
-                }
+                onChange={e => setDraft({ ...draft, notes: e.target.value })}
                 className="w-full bg-slate-900 p-3 rounded"
                 rows={4}
                 placeholder="Notes"
