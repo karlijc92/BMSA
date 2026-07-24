@@ -111,6 +111,11 @@ export default function Profile() {
         .eq("email", session.user.email)
         .maybeSingle();
 
+      if (error) {
+        console.error("LOAD PROFILE ERROR:", error);
+        setSavedMsg("Load error: " + error.message);
+      }
+
       if (data) {
         const merged = { ...emptyProfile, ...data };
         setProfile(merged);
@@ -131,7 +136,8 @@ export default function Profile() {
       .upsert({ email, ...draft }, { onConflict: "email" });
 
     if (error) {
-      setSavedMsg("Error saving profile");
+      console.error("SAVE PROFILE ERROR:", error);
+      setSavedMsg("Error: " + error.message);
       return;
     }
 
@@ -218,6 +224,10 @@ export default function Profile() {
 
         <p className="mb-6 text-slate-300">Email: {email}</p>
 
+        {savedMsg && (
+          <p className="mb-4 text-sm font-semibold text-emerald-400">{savedMsg}</p>
+        )}
+
         {!editing && (
           <div className="space-y-6">
 
@@ -261,10 +271,6 @@ export default function Profile() {
               >
                 Edit Profile
               </button>
-
-              {savedMsg && (
-                <p className="text-emerald-400 mt-3">{savedMsg}</p>
-              )}
             </div>
 
             <div className="bg-slate-950 border border-slate-800 p-5 rounded">
