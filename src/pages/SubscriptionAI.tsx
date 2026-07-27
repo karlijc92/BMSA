@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, FormEvent } from "react";
 import DisclaimerFooter from "@/components/DisclaimerFooter";
+import { supabase } from "@/lib/supabaseClient";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -7,7 +8,7 @@ interface ChatMessage {
 }
 
 export default function SubscriptionAI() {
-  // Auth/subscription flags (temporary + intentional)
+  const [checkingAccess, setCheckingAccess] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
 
@@ -25,14 +26,48 @@ export default function SubscriptionAI() {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // These are the keys your current auth flow uses
-    const loggedIn = localStorage.getItem("bmsa_logged_in") === "true";
+    let isMounted = true;
 
-    // We are using this subscription flag for gating
-    const subscribed = localStorage.getItem("bmsa_is_subscribed") === "true";
+    async function checkAccess() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-    setIsLoggedIn(loggedIn);
-    setIsSubscribed(subscribed);
+      if (!session?.user) {
+        if (isMounted) {
+          setIsLoggedIn(false);
+          setIsSubscribed(false);
+          setCheckingAccess(false);
+        }
+        return;
+      }
+
+      if (isMounted) setIsLoggedIn(true);
+
+      const { data: profile, error: profileError } = await supabase
+        .from("bmsa_profiles")
+        .select("is_subscribed")
+        .eq("id", session.user.id)
+        .single();
+
+      if (isMounted) {
+        setIsSubscribed(!profileError && profile?.is_subscribed === true);
+        setCheckingAccess(false);
+      }
+    }
+
+    checkAccess();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      checkAccess();
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -42,7 +77,6 @@ export default function SubscriptionAI() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
 
-    // Hard gate: never allow chat submit unless subscribed
     if (!isLoggedIn || !isSubscribed) return;
 
     const trimmed = input.trim();
@@ -89,7 +123,6 @@ export default function SubscriptionAI() {
   return (
     <main className="min-h-screen bg-black text-white">
       <section className="max-w-3xl mx-auto px-4 py-10">
-        {/* TOP NAV */}
         <div className="flex items-center justify-between mb-6">
           <button
             type="button"
@@ -99,7 +132,7 @@ export default function SubscriptionAI() {
             ← Back
           </button>
 
-          <a
+          
             href="/profile"
             className="text-sm font-semibold text-emerald-400 hover:text-emerald-300"
           >
@@ -111,21 +144,26 @@ export default function SubscriptionAI() {
           Black Market Supplement Advisor
         </h1>
 
-        {/* GATE: Not logged in */}
-        {!isLoggedIn && (
+        {checkingAccess && (
+          <div className="mt-6 border border-emerald-500/40 rounded-xl p-5 bg-slate-900/60">
+            <p className="text-sm text-gray-400">Checking your access...</p>
+          </div>
+        )}
+
+        {!checkingAccess && !isLoggedIn && (
           <div className="mt-6 border border-emerald-500/40 rounded-xl p-5 bg-slate-900/60">
             <p className="text-sm text-gray-200">
               You need to be logged in to access the advisor.
             </p>
 
             <div className="mt-4 flex gap-2">
-              <a
+              
                 href="/signup"
                 className="rounded-lg px-4 py-2 text-sm font-semibold bg-emerald-500 text-black"
               >
                 Sign up
               </a>
-              <a
+              
                 href="/login"
                 className="rounded-lg px-4 py-2 text-sm border border-slate-600"
               >
@@ -135,21 +173,20 @@ export default function SubscriptionAI() {
           </div>
         )}
 
-        {/* GATE: Logged in but not subscribed */}
-        {isLoggedIn && !isSubscribed && (
+        {!checkingAccess && isLoggedIn && !isSubscribed && (
           <div className="mt-6 border border-emerald-500/40 rounded-xl p-5 bg-slate-900/60">
             <p className="text-sm text-gray-200">
               You need an active subscription to access the advisor.
             </p>
 
             <div className="mt-4 flex gap-2">
-              <a
+              
                 href="/subscribe"
                 className="rounded-lg px-4 py-2 text-sm font-semibold bg-emerald-500 text-black"
               >
                 Subscribe
               </a>
-              <a
+              
                 href="/profile"
                 className="rounded-lg px-4 py-2 text-sm border border-slate-600"
               >
@@ -159,8 +196,7 @@ export default function SubscriptionAI() {
           </div>
         )}
 
-        {/* AI CHAT: Only if logged in + subscribed */}
-        {isLoggedIn && isSubscribed && (
+        {!checkingAccess && isLoggedIn && isSubscribed && (
           <div className="mt-6 border border-emerald-500/40 rounded-xl p-4 h-[480px] flex flex-col bg-slate-900/60">
             <div className="flex-1 overflow-y-auto space-y-3 pr-1">
               {messages.map((m, idx) => (
