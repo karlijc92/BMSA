@@ -9,7 +9,6 @@ type Props = {
 export default function SignUpForm({ mode = "signup" }: Props) {
   const navigate = useNavigate();
   const isLogin = mode === "login";
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -59,6 +58,18 @@ export default function SignUpForm({ mode = "signup" }: Props) {
         return;
       }
 
+      if (data.user) {
+        const { error: profileError } = await supabase.from("bmsa_profiles").insert({
+          id: data.user.id,
+          email: data.user.email,
+          is_subscribed: false,
+        });
+
+        if (profileError) {
+          console.error("Failed to create profile row:", profileError);
+        }
+      }
+
       navigate("/subscribe");
     }
 
@@ -78,7 +89,6 @@ export default function SignUpForm({ mode = "signup" }: Props) {
           ? "Log in to access your account"
           : "Create your account to access AI-powered supplement guidance"}
       </p>
-
       {!isLogin && (
         <div className="grid grid-cols-2 gap-3 mb-4">
           <input
@@ -95,7 +105,6 @@ export default function SignUpForm({ mode = "signup" }: Props) {
           />
         </div>
       )}
-
       <input
         placeholder="Email"
         type="email"
@@ -110,11 +119,9 @@ export default function SignUpForm({ mode = "signup" }: Props) {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-
       {error && (
         <p className="text-red-400 text-sm mb-3 text-center">{error}</p>
       )}
-
       <button
         type="submit"
         disabled={isLoading}
