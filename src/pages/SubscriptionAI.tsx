@@ -132,10 +132,7 @@ export default function SubscriptionAI() {
             ← Back
           </button>
 
-          
-            href="/profile"
-            className="text-sm font-semibold text-emerald-400 hover:text-emerald-300"
-          >
+          <a href="/profile" className="text-sm font-semibold text-emerald-400 hover:text-emerald-300">
             Profile
           </a>
         </div>
@@ -157,16 +154,10 @@ export default function SubscriptionAI() {
             </p>
 
             <div className="mt-4 flex gap-2">
-              
-                href="/signup"
-                className="rounded-lg px-4 py-2 text-sm font-semibold bg-emerald-500 text-black"
-              >
+              <a href="/signup" className="rounded-lg px-4 py-2 text-sm font-semibold bg-emerald-500 text-black">
                 Sign up
               </a>
-              
-                href="/login"
-                className="rounded-lg px-4 py-2 text-sm border border-slate-600"
-              >
+              <a href="/login" className="rounded-lg px-4 py-2 text-sm border border-slate-600">
                 Log in
               </a>
             </div>
@@ -180,16 +171,10 @@ export default function SubscriptionAI() {
             </p>
 
             <div className="mt-4 flex gap-2">
-              
-                href="/subscribe"
-                className="rounded-lg px-4 py-2 text-sm font-semibold bg-emerald-500 text-black"
-              >
+              <a href="/subscribe" className="rounded-lg px-4 py-2 text-sm font-semibold bg-emerald-500 text-black">
                 Subscribe
               </a>
-              
-                href="/profile"
-                className="rounded-lg px-4 py-2 text-sm border border-slate-600"
-              >
+              <a href="/profile" className="rounded-lg px-4 py-2 text-sm border border-slate-600">
                 Go to Profile
               </a>
             </div>
